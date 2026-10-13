@@ -76,7 +76,7 @@ stack runs from a single `docker compose up`.
 ## 🚀 Quick start (Docker)
 
 ```bash
-git clone https://github.com/xnohat/webobsidian.git
+git clone https://github.com/lakylekidd/webobsidian.git
 cd webobsidian
 cp .env.example .env          # edit VAULT_HOST_PATH, set WEBOBSIDIAN_PASSWORD
 docker compose up -d --build
@@ -90,7 +90,7 @@ deployment settings live in **`.env`** (git-ignored) — you never edit the trac
 ## 🖥️ Desktop app (no server setup)
 
 Prefer a native app? Grab an installer from the
-[**Releases**](https://github.com/xnohat/webobsidian/releases) page — available for
+[**Releases**](https://github.com/lakylekidd/webobsidian/releases) page — available for
 **macOS / Windows / Linux** (arm64 · x64 · ia32):
 
 | Platform | Download |

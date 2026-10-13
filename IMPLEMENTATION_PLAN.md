@@ -4,7 +4,7 @@
 > Quy ước: `[ ]` chưa làm · `[~]` đang làm · `[x]` xong.
 > Cập nhật file này **mỗi khi** một mục thay đổi trạng thái.
 
-Cập nhật lần cuối: 2026-10-12 (bug #19 — dark mode contrast + con trỏ editor; trước đó: security fix — chặn leo thang quyền token share; merge fix F-03 rate-limit, giữ `trust proxy` mặc định bật)
+Cập nhật lần cuối: 2026-10-13 (đã kiểm chứng cấu hình release v0.1.2 cho fork lakylekidd/webobsidian)
 
 ---
 
@@ -428,9 +428,19 @@ Cập nhật lần cuối: 2026-10-12 (bug #19 — dark mode contrast + con tr�
       GitHub Release draft, `GH_TOKEN`, `CSC_IDENTITY_AUTO_DISCOVERY=false`). `ci.yml` thêm typecheck + build
       bundle desktop. Root scripts `desktop`/`desktop:dist`/`desktop:publish`; `.gitignore` thêm `desktop/.gen`,
       `desktop/release`.
+- [x] M27.6 Chuẩn bị release v0.1.2 cho fork `lakylekidd/webobsidian`: bump root + desktop theo lịch sử v0.1.1,
+      đồng bộ lockfile, publish target/homepage/download links trỏ về fork; kiểm chứng typecheck + build
+      web/server/desktop OK. Workflow fork đang active; push annotated tag `v0.1.2` để CI tạo draft release,
+      chỉ Publish sau khi cả ba runner hoàn thành.
 
 ### Nhật ký tiến độ
 
+- 2026-10-13 (release v0.1.2 — cấu hình đã kiểm chứng): root/desktop + lockfile đồng bộ `0.1.2`;
+  publish target/homepage/download links trỏ về fork. `npm ci`, typecheck root + desktop, build
+  web/server + desktop bundle đều OK sau thay đổi. Nội dung kể từ v0.1.1: fix dark-mode contrast/cursor
+  (#19), metadata và tài liệu fork. npm báo 45 vulnerability dependency có sẵn; không đổi dependency.
+- 2026-10-13 (release v0.1.2 — bắt đầu): theo quy trình tag/draft của FR-13; giữ author/copyright upstream.
+  Baseline: `npm ci`, typecheck root + desktop, build web/server + desktop bundle đều OK.
 - 2026-10-12 (Bug #19 — dark mode contrast): chữ tối trên nền tối trong modal/Settings do `body` resolve `--text-normal` theo `:root` (light) nên con kế thừa màu tối; con trỏ CodeMirror mặc định đen. Fix CSS (`obsidian.css`): đặt `color`/`background` trên `.theme-light/.theme-dark`, `.modal`, `.context-menu`, `.toast`; đặt `border-left-color` cho `.cm-cursor`/`.cm-dropCursor` (trắng ở dark). Typecheck OK; chưa kiểm chứng trực quan.
 - 2026-06-27 (security fix — leo thang quyền qua token share): `verifyToken()` (server/src/services/auth.ts)
   chỉ kiểm tra chữ ký nên **mọi** token ký bằng `auth.jwtSecret` đều được chấp nhận như phiên owner. Endpoint
