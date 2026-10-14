@@ -27,17 +27,30 @@ function RenameInput({ node, onDone }: { node: TreeNode; onDone: () => void }) {
     done.current = true;
     const name = (ref.current?.value ?? '').trim();
     onDone();
-    if (!commit || !name || name === node.name) return;
+    const st = useStore.getState();
+    const isNew = st.newNotePath === node.path;
+    if (isNew) st.setNewNotePath(null);
+    let finalPath = node.path;
     const dir = parentDir(node.path);
     const to = dir ? `${dir}/${name}` : name;
-    if (to === node.path) return;
-    try {
-      await api.rename(node.path, to);
-      closeTab(node.path);
-    } catch (e: any) {
-      notify(e?.message ?? 'Rename failed');
+    if (commit && name && name !== node.name && to !== node.path) {
+      try {
+        await api.rename(node.path, to);
+        closeTab(node.path);
+        finalPath = to;
+      } catch (e: any) {
+        notify(e?.message ?? 'Rename failed');
+      }
     }
     await loadTree();
+    if (isNew) {
+      // Keep the freshly named note selected, open and scrolled into view after re-sorting.
+      const s2 = useStore.getState();
+      s2.setSelected([finalPath]);
+      s2.setSelectAnchor(finalPath);
+      await s2.openFile(finalPath);
+      s2.revealInTree(finalPath);
+    }
   };
 
   return (

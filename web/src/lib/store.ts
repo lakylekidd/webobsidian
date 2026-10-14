@@ -203,6 +203,9 @@ interface AppState {
   newCanvas: (dir?: string) => Promise<void>;
   /** Tree path currently being inline-renamed (null = none); FileTree shows an input for it. */
   renamingPath: string | null;
+  /** Path of a just-created note awaiting its first (inline) rename; opened once that finishes. */
+  newNotePath: string | null;
+  setNewNotePath: (path: string | null) => void;
   setRenamingPath: (path: string | null) => void;
   openDailyNote: () => Promise<void>;
   /** Re-fetch content for the active/split tabs (after reload or remote sync). */
@@ -543,8 +546,20 @@ export const useStore = create<AppState>()(
         let name = 'Untitled.md';
         for (let i = 1; taken.has(name.toLowerCase()); i++) name = `Untitled ${i}.md`;
         const path = base ? `${base}/${name}` : name;
-        await get().createNote(path, '');
-        if (base) get().revealInTree(path);
+        // Create the file, then drop straight into inline rename (like newFolder);
+        // the note is opened once the rename finishes so the editor can't steal focus.
+        await api.write(path, '');
+        await get().loadTree();
+        if (base) {
+          const ancestors: string[] = [];
+          let acc = '';
+          for (const sg of base.split('/')) { acc = acc ? `${acc}/${sg}` : sg; ancestors.push(acc); }
+          set((st) => ({ expanded: Array.from(new Set([...st.expanded, ...ancestors])) }));
+        }
+        set({ leftPanel: 'files', leftOpen: true, newNotePath: path, renamingPath: path, selected: [path], selectAnchor: path });
+        window.setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('wo-reveal-file', { detail: { path } }));
+        }, 60);
       },
 
       newCanvas: async (dir) => {
@@ -559,6 +574,8 @@ export const useStore = create<AppState>()(
       },
 
       renamingPath: null,
+      newNotePath: null,
+      setNewNotePath: (path) => set({ newNotePath: path }),
       setRenamingPath: (path) => set({ renamingPath: path }),
 
       newFolder: async (dir) => {
