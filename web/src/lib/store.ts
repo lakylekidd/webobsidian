@@ -514,13 +514,15 @@ export const useStore = create<AppState>()(
         }
       },
 
-      closeTab: (path) =>
-        set((s) => {
-          const tabs = s.tabs.filter((t) => t.path !== path);
-          const wasActive = s.activePath === path;
-          const activePath = wasActive ? (tabs.at(-1)?.path ?? null) : s.activePath;
-          return { tabs, activePath, ...(wasActive ? { content: '', dirty: false } : {}) };
-        }),
+      closeTab: (path) => {
+        const s = get();
+        const tabs = s.tabs.filter((t) => t.path !== path);
+        const wasActive = s.activePath === path;
+        const activePath = wasActive ? (tabs.at(-1)?.path ?? null) : s.activePath;
+        set({ tabs, activePath, ...(wasActive ? { content: '', dirty: false } : {}) });
+        // The newly selected tab must load its content, otherwise the editor stays blank.
+        if (wasActive && activePath) void get().openFile(activePath);
+      },
 
       setContent: (c) => set({ content: c, dirty: true }),
 
