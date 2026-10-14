@@ -11,6 +11,7 @@ import { syntaxTree } from '@codemirror/language';
 import { CALLOUT_SLOT, CALLOUT_RE, calloutDefaultTitle, calloutIconSvg } from './callouts';
 import { openLightbox } from './imageLightbox';
 import { VIDEO_EXT_RE, AUDIO_EXT_RE } from './media';
+import { resolveExternalEmbed, createEmbedElement, type ExternalEmbed } from './embeds';
 
 /**
  * Live Preview for CodeMirror 6 — an Obsidian-style WYSIWYG editing mode.
@@ -340,6 +341,25 @@ class MediaWidget extends WidgetType {
       embedNotFound(miss, this.alt);
     };
     wrap.appendChild(el);
+    return wrap;
+  }
+}
+
+/** Inline player for a whitelisted media URL alone on its line (YouTube/Instagram/Facebook). */
+class ExternalEmbedWidget extends WidgetType {
+  constructor(readonly embed: ExternalEmbed) {
+    super();
+  }
+  eq(o: ExternalEmbedWidget) {
+    return o.embed.src === this.embed.src;
+  }
+  ignoreEvent() {
+    return true;
+  }
+  toDOM() {
+    const wrap = document.createElement('div');
+    wrap.className = 'cm-external-embed-wrap';
+    wrap.appendChild(createEmbedElement(this.embed));
     return wrap;
   }
 }
@@ -2388,6 +2408,15 @@ function buildDecorations(view: EditorView): DecorationSet {
             Decoration.replace({ widget: new WikilinkWidget(href, label, isEmbed, defaultDisplay !== label ? defaultDisplay : undefined) }),
           );
         }
+      }
+
+      // Standalone media URL → inline player (raw URL shows while the caret is on it)
+      const embedM = text.match(/^\s*(https?:\/\/\S+)\s*$/);
+      if (embedM) {
+        const s = line.from + text.indexOf(embedM[1]);
+        const e = s + embedM[1].length;
+        const emb = !touches(s, e) && !inCode(s, e) ? resolveExternalEmbed(embedM[1]) : null;
+        if (emb) pushReplace(s, e, Decoration.replace({ widget: new ExternalEmbedWidget(emb) }));
       }
 
       // Markdown images ![alt](url) — URL may contain spaces (real-world vaults)
