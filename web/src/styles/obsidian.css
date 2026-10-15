@@ -485,6 +485,8 @@ body.wo-col-resizing .sidebar, body.wo-col-resizing .right-sidebar { transition:
 }
 .cm-s-obsidian .cm-task-checkbox { box-sizing: border-box; }
 .cm-s-obsidian .cm-bullet { display: inline-block; width: var(--hang-marker-w); text-indent: 0; }
+/* Ordered-list marker (`1.`): fixed box incl. the gap; width set per line (digit count). */
+.cm-s-obsidian .cm-line.HyperMD-hang .cm-ol-marker { display: inline-block; width: var(--hang-marker-w); text-indent: 0; white-space: nowrap; vertical-align: top; }
 .cm-s-obsidian .cm-line.HyperMD-hang .cm-indent { width: var(--hang-indent-w); overflow: hidden; vertical-align: top; text-indent: 0; }
 .cm-s-obsidian .cm-line.HyperMD-hang {
   --hang-prefix: calc(var(--hang-units, 0) * var(--hang-indent-w) + var(--hang-marker-w));

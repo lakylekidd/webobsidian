@@ -2233,11 +2233,12 @@ function buildDecorations(view: EditorView): DecorationSet {
       };
       // Hanging indent: wrapped lines align with the text after the marker. Indent
       // units and the marker widget have fixed widths (see .HyperMD-hang in CSS).
-      const hang = (ws: string) => {
+      // `markerW` overrides the marker width (ordered lists: depends on digit count).
+      const hang = (ws: string, markerW?: string): Record<string, string> => {
         if (bodyStart) return {};
         let units = 0;
         for (let i = 0; i < ws.length; i += ws[i] === '\t' ? 1 : 4) units++;
-        return { style: `--hang-units:${units}` };
+        return { style: `--hang-units:${units}${markerW ? `;--hang-marker-w:${markerW}` : ''}` };
       };
       const task = body.match(/^(\s*)([-*+])\s+\[(.)\]\s/);
       if (task) {
@@ -2272,15 +2273,31 @@ function buildDecorations(view: EditorView): DecorationSet {
             if (bullet[3].length > 1) pushReplace(markerEnd + 1, spaceEnd, hidden);
           }
         } else {
-          // Ordered list: keep the `1.` but collapse extra spaces after it.
+          // Ordered list: keep the `1.` but collapse extra spaces after it. The marker
+          // is drawn in a fixed-width box (width grows with digit count) so wrapped
+          // lines can hang under the text, like bullets.
           const ol = body.match(/^(\s*)(\d{1,9}[.)])(\s+)/);
           if (ol) {
-            all.push(Decoration.line({ class: 'HyperMD-list-line' }).range(line.from, line.from));
+            const digits = ol[2].length - 1;
+            const markerW = `${(1.6 + (digits - 1) * 0.6).toFixed(2)}em`;
+            all.push(
+              Decoration.line({
+                class: bodyStart ? 'HyperMD-list-line' : 'HyperMD-list-line HyperMD-hang',
+                attributes: hang(ol[1], markerW),
+              }).range(line.from, line.from),
+            );
             indentGuides(ol[1]);
-            if (ol[3].length > 1) {
-              const markerEnd = bodyFrom + ol[1].length + ol[2].length;
-              const spaceEnd = markerEnd + ol[3].length;
-              if (!touches(bodyFrom + ol[1].length, spaceEnd)) pushReplace(markerEnd + 1, spaceEnd, hidden);
+            const start = bodyFrom + ol[1].length;
+            const markerEnd = start + ol[2].length;
+            const spaceEnd = markerEnd + ol[3].length;
+            if (!touches(start, spaceEnd)) {
+              if (bodyStart) {
+                // In quotes/callouts there is no hanging box: keep one space after the marker.
+                if (ol[3].length > 1) pushReplace(markerEnd + 1, spaceEnd, hidden);
+              } else {
+                all.push(Decoration.mark({ class: 'cm-ol-marker' }).range(start, markerEnd));
+                pushReplace(markerEnd, spaceEnd, hidden);
+              }
             }
           }
         }
