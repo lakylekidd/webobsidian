@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Compartment, EditorState, Prec } from '@codemirror/state';
-import { EditorView, keymap, highlightActiveLine, drawSelection } from '@codemirror/view';
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { EditorView, keymap, highlightActiveLine, drawSelection, rectangularSelection, crosshairCursor } from '@codemirror/view';
+import { defaultKeymap, simplifySelection, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { search, searchKeymap } from '@codemirror/search';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -249,6 +249,11 @@ export default function Editor() {
       extensions: [
         history(),
         drawSelection(),
+        // VS Code-style multi-cursor: Alt+Click adds a cursor, Shift+Alt+Drag = column selection.
+        EditorState.allowMultipleSelections.of(true),
+        EditorView.clickAddsSelectionRange.of((e) => e.altKey && !e.shiftKey),
+        rectangularSelection({ eventFilter: (e) => e.altKey && e.shiftKey && e.button === 0 }),
+        crosshairCursor({ key: 'Alt' }),
         highlightActiveLine(),
         // Obsidian default hotkeys (§4) win over CodeMirror's defaults.
         Prec.high(
@@ -263,7 +268,7 @@ export default function Editor() {
         ),
         // In-document Find/Replace (⌘F / ⌘⇧F open the panel; ⌘G next).
         search({ top: true }),
-        keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
+        keymap.of([{ key: 'Escape', run: simplifySelection }, ...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
         // GFM base so Strikethrough/Table/TaskList nodes exist (Obsidian dialect);
         // codeLanguages lazy-loads grammars for fenced blocks (Obsidian: Prism).
         markdown({ base: markdownLanguage, codeLanguages: languages }),
