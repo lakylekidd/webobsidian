@@ -9,6 +9,7 @@ import {
 import { StateField, StateEffect, type EditorState, type Range, type Text } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
 import { CALLOUT_SLOT, CALLOUT_RE, calloutDefaultTitle, calloutIconSvg } from './callouts';
+import { fetchLinkPreview, createPreviewCard } from './linkPreview';
 import { openLightbox } from './imageLightbox';
 import { VIDEO_EXT_RE, AUDIO_EXT_RE } from './media';
 
@@ -160,6 +161,30 @@ class MdLinkWidget extends WidgetType {
   }
   ignoreEvent() {
     return false;
+  }
+}
+
+class LinkPreviewWidget extends WidgetType {
+  constructor(readonly url: string) {
+    super();
+  }
+  eq(o: LinkPreviewWidget) {
+    return o.url === this.url;
+  }
+  toDOM() {
+    const wrap = document.createElement('span');
+    wrap.className = 'link-preview cm-link-preview';
+    const a = document.createElement('a');
+    a.className = 'cm-md-link external-link';
+    a.textContent = this.url;
+    wrap.appendChild(a);
+    fetchLinkPreview(this.url).then((meta) => {
+      if (meta && wrap.isConnected) wrap.replaceChildren(createPreviewCard(meta));
+    });
+    return wrap;
+  }
+  ignoreEvent() {
+    return true;
   }
 }
 
@@ -2425,6 +2450,11 @@ function buildDecorations(view: EditorView): DecorationSet {
         if (touches(s, e) || inCode(s, e)) continue;
         const url = m[2].replace(/\s+"[^"]*"$/, '').trim();
         pushReplace(s, e, Decoration.replace({ widget: new MdLinkWidget(m[1], url) }));
+      }
+
+      // Standalone bare URL line → rich preview card (raw text shown while editing).
+      if (/^https?:\/\/\S+$/i.test(text) && !lineActive(line.from) && !inCode(line.from, line.to)) {
+        pushReplace(line.from, line.to, Decoration.replace({ widget: new LinkPreviewWidget(text) }));
       }
 
       // Markdown escapes `\.` `\*` … — conceal the backslash like Obsidian LP

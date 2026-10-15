@@ -2,6 +2,8 @@
 
 > Product Requirements Document
 > Phiên bản: 1.5 · Cập nhật: 2026-06-22 · Trạng thái: Draft
+> Changelog 1.6 (FR-2 — Link preview card, issue #7): URL đứng riêng một dòng render thành thẻ preview (thumbnail, title, mô tả 2 dòng, domain) ở Reading view, Live Preview và trang Public share; Markdown gốc giữ nguyên, lỗi fetch → link thường. Server fetch metadata an toàn (chặn IP nội bộ, giới hạn redirect/size/timeout, chỉ lấy OG text) qua provider chain mở rộng được.
+>
 > Changelog 1.5 (FR-13 — Desktop app Electron đa nền tảng, theo yêu cầu người dùng): bổ sung **FR-13** —
 > đóng gói WebObsidian thành **app cài đặt** macOS/Windows/Linux (arm64/x64/ia32). Workspace mới `desktop/`
 > là **Electron shell** spawn đúng server Express hiện có như tiến trình con (qua `ELECTRON_RUN_AS_NODE`,
@@ -449,6 +451,7 @@ POST   /api/files/trash/restore   # khôi phục {path} về vị trí gốc
 DELETE /api/files/trash/item # xoá vĩnh viễn 1 item trong trash
 DELETE /api/files/trash      # empty trash (xoá hẳn toàn bộ)
 GET    /api/search?q=...
+GET    /api/linkpreview?url=...   # OG metadata (title/description/image/domain) cho link preview card; SSRF-guarded, cache RAM
 GET    /api/backlinks?path=...
 GET    /api/git/status | POST /api/git/{pull,commit,push,sync}
 GET/PUT /api/settings

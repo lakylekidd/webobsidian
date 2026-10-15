@@ -20,6 +20,7 @@ import { filesRouter } from './routes/files.js';
 import { searchRouter } from './routes/search.js';
 import { settingsRouter } from './routes/settings.js';
 import { gitRouter } from './routes/git.js';
+import { linkPreviewRouter } from './routes/linkpreview.js';
 import { keysRouter } from './routes/keys.js';
 import { pluginsRouter } from './routes/plugins.js';
 import { agentRouter } from './routes/agent.js';
@@ -111,6 +112,7 @@ async function main() {
   app.use('/api/settings', settingsRouter);
   app.use('/api/git', gitRouter);
   app.use('/api/keys', keysRouter);
+  app.use('/api/linkpreview', linkPreviewRouter);
   app.use('/api/plugins', pluginsRouter);
   app.use('/api/uistate', uiStateRouter);
   app.use('/api/shares', sharesRouter); // manage public share links (auth)
