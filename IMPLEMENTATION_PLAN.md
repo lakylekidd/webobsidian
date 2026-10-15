@@ -4,7 +4,7 @@
 > Quy ước: `[ ]` chưa làm · `[~]` đang làm · `[x]` xong.
 > Cập nhật file này **mỗi khi** một mục thay đổi trạng thái.
 
-Cập nhật lần cuối: 2026-10-13 (đã kiểm chứng cấu hình release v0.1.2 cho fork lakylekidd/webobsidian)
+Cập nhật lần cuối: 2026-10-15 (link preview card #7; trước đó 2026-10-13 đã kiểm chứng cấu hình release v0.1.2 cho fork lakylekidd/webobsidian)
 
 ---
 
@@ -1284,3 +1284,4 @@ Cập nhật lần cuối: 2026-10-13 (đã kiểm chứng cấu hình release v
   icon globe màu accent cạnh tên. Icon `globe` thêm vào bộ Lucide. Verify headless Chrome qua CDP
   (MCP bị phiên khác giữ): badge hiện đúng note share + màu accent, menu có "Share…", dialog mở đủ
   controls (URL đúng token, toggle on, Set password…, Delete). Typecheck + build sạch.
+- 2026-10-15: Link preview card (issue #7, PRD 1.6) — `server/src/services/linkpreview.ts` (OG fetch SSRF-guarded, cache, provider chain, SSR `embedLinkPreviews` cho share page), route `GET /api/linkpreview`, web `lib/linkPreview.ts` (Reading view) + `LinkPreviewWidget` (Live Preview), CSS `.link-preview-card`. Verify: typecheck sạch; test thủ công parse OG, chặn loopback, fallback link thường.

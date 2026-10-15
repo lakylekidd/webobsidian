@@ -4,6 +4,7 @@ import { LanguageDescription } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import { useStore } from '../lib/store';
 import { renderMarkdown } from '../lib/markdown';
+import { enhanceLinkPreviews } from '../lib/linkPreview';
 import { calloutIconSvg } from '../lib/callouts';
 import { openLightbox } from '../lib/imageLightbox';
 import { api } from '../lib/api';
@@ -141,6 +142,7 @@ export default function Preview({ source }: { source?: string }) {
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
       title.appendChild(ch);
     }
+    enhanceLinkPreviews(root, () => cancelled);
     if (root.querySelector('[data-tex]')) {
       void loadKatex().then((katex) => {
         if (cancelled) return;

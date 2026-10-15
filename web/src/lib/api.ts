@@ -81,6 +81,14 @@ async function req<T>(url: string, opts: RequestInit = {}): Promise<T> {
   return (ct.includes('application/json') ? res.json() : (res.text() as unknown)) as Promise<T>;
 }
 
+export interface LinkPreview {
+  url: string;
+  title: string;
+  description: string;
+  image: string | null;
+  domain: string;
+}
+
 export class ApiError extends Error {
   constructor(message: string, public status: number) {
     super(message);
@@ -104,6 +112,8 @@ export const api = {
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
   me: () => req<{ authenticated: boolean; mustChangePassword: boolean }>('/auth/me'),
+
+  linkPreview: (url: string) => req<LinkPreview>(`/api/linkpreview?url=${encodeURIComponent(url)}`),
 
   // files
   tree: () => req<TreeNode>('/api/files/'),
