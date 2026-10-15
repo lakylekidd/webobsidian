@@ -4,7 +4,7 @@
 > Quy ước: `[ ]` chưa làm · `[~]` đang làm · `[x]` xong.
 > Cập nhật file này **mỗi khi** một mục thay đổi trạng thái.
 
-Cập nhật lần cuối: 2026-10-15 (multi-cursor #10; link preview card #7; trước đó 2026-10-13 đã kiểm chứng cấu hình release v0.1.2 cho fork lakylekidd/webobsidian)
+Cập nhật lần cuối: 2026-10-15 (hanging indent list/task/ordered; multi-cursor #10; link preview card #7; trước đó 2026-10-13 đã kiểm chứng cấu hình release v0.1.2 cho fork lakylekidd/webobsidian)
 
 ---
 
@@ -1286,3 +1286,4 @@ Cập nhật lần cuối: 2026-10-15 (multi-cursor #10; link preview card #7; t
   controls (URL đúng token, toggle on, Set password…, Delete). Typecheck + build sạch.
 - 2026-10-15: Link preview card (issue #7, PRD 1.6) — `server/src/services/linkpreview.ts` (OG fetch SSRF-guarded, cache, provider chain, SSR `embedLinkPreviews` cho share page), route `GET /api/linkpreview`, web `lib/linkPreview.ts` (Reading view) + `LinkPreviewWidget` (Live Preview), CSS `.link-preview-card`. Verify: typecheck sạch; test thủ công parse OG, chặn loopback, fallback link thường.
 - 2026-10-15: Multi-cursor & column selection (issue #10) — `Editor.tsx`: allowMultipleSelections, Alt+Click thêm cursor, Shift+Alt+Drag chọn cột (rectangularSelection), Escape về 1 cursor (simplifySelection); `livePreview.ts` `editorClickFix` bỏ qua Alt+Click để không collapse multi-cursor. Verify: typecheck sạch; test thủ công Alt+Click thêm cursor + Escape (Source mode); Shift+Alt+Drag chưa kiểm chứng.
+- 2026-10-15: Hanging indent cho list/task/ordered list (Live Preview) — `livePreview.ts` (`hang()` đặt `--hang-units`/`--hang-marker-w`, class `HyperMD-hang`; ordered list: marker `1.` bọc `cm-ol-marker` rộng cố định theo số chữ số, khoảng trắng sau marker ẩn khi caret không chạm), `obsidian.css` (padding-left + text-indent âm). Không áp dụng trong quote/callout. Verify: typecheck sạch; đo pixel dòng wrap == dòng đầu cho bullet/task/lồng nhau/ordered 1–3 chữ số; trạng thái raw khi caret chạm marker ổn định.
