@@ -4,6 +4,7 @@ import { EditorView, keymap, highlightActiveLine, drawSelection, rectangularSele
 import { defaultKeymap, simplifySelection, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { search, searchKeymap } from '@codemirror/search';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { yamlFrontmatter } from '@codemirror/lang-yaml';
 import { languages } from '@codemirror/language-data';
 import { syntaxHighlighting } from '@codemirror/language';
 import { obsidianHighlightStyle } from '../lib/highlight';
@@ -271,7 +272,8 @@ export default function Editor() {
         keymap.of([{ key: 'Escape', run: simplifySelection }, ...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
         // GFM base so Strikethrough/Table/TaskList nodes exist (Obsidian dialect);
         // codeLanguages lazy-loads grammars for fenced blocks (Obsidian: Prism).
-        markdown({ base: markdownLanguage, codeLanguages: languages }),
+        // YAML front matter (--- … ---) is parsed as YAML; the rest stays Markdown.
+        yamlFrontmatter({ content: markdown({ base: markdownLanguage, codeLanguages: languages }) }),
         suggesterPlugin,
         // Obsidian token palette via CSS vars (works in both themes); markdown
         // structure styling is owned by the Live Preview decorations.
