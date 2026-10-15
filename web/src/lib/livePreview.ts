@@ -2699,7 +2699,7 @@ export const livePreviewPlugin = ViewPlugin.fromClass(
  */
 export const editorClickFix = EditorView.domEventHandlers({
   mousedown(event, view) {
-    if (event.button !== 0 || event.shiftKey || event.detail > 1) return false;
+    if (event.button !== 0 || event.shiftKey || event.altKey || event.detail > 1) return false;
     // `precise: false` returns the CLOSEST position and never null, so clicking
     // anywhere on a tall heading line-box (incl. its padding, where the default
     // posAtCoords returns null and CM leaves the caret put) still moves the caret
