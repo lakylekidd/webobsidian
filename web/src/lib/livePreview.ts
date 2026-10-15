@@ -2231,12 +2231,20 @@ function buildDecorations(view: EditorView): DecorationSet {
           i = end;
         }
       };
+      // Hanging indent: wrapped lines align with the text after the marker. Indent
+      // units and the marker widget have fixed widths (see .HyperMD-hang in CSS).
+      const hang = (ws: string) => {
+        if (bodyStart) return {};
+        let units = 0;
+        for (let i = 0; i < ws.length; i += ws[i] === '\t' ? 1 : 4) units++;
+        return { style: `--hang-units:${units}` };
+      };
       const task = body.match(/^(\s*)([-*+])\s+\[(.)\]\s/);
       if (task) {
         all.push(
           Decoration.line({
-            class: 'HyperMD-list-line HyperMD-task-line',
-            attributes: { 'data-task': task[3] },
+            class: bodyStart ? 'HyperMD-list-line HyperMD-task-line' : 'HyperMD-list-line HyperMD-task-line HyperMD-hang',
+            attributes: { 'data-task': task[3], ...hang(task[1]) },
           }).range(line.from, line.from),
         );
         indentGuides(task[1]);
@@ -2247,7 +2255,12 @@ function buildDecorations(view: EditorView): DecorationSet {
       } else {
         const bullet = body.match(/^(\s*)([-*+])(\s+)/);
         if (bullet) {
-          all.push(Decoration.line({ class: 'HyperMD-list-line' }).range(line.from, line.from));
+          all.push(
+            Decoration.line({
+              class: bodyStart ? 'HyperMD-list-line' : 'HyperMD-list-line HyperMD-hang',
+              attributes: hang(bullet[1]),
+            }).range(line.from, line.from),
+          );
           indentGuides(bullet[1]);
           // Replace the `-`/`*`/`+` marker with a bullet and collapse its trailing
           // whitespace to a single space, so `-   Item` reads `• Item` like Obsidian.
@@ -2255,7 +2268,7 @@ function buildDecorations(view: EditorView): DecorationSet {
           const markerEnd = start + 1;
           const spaceEnd = markerEnd + bullet[3].length;
           if (!touches(start, spaceEnd)) {
-            pushReplace(start, markerEnd, Decoration.replace({ widget: new BulletWidget() }));
+            pushReplace(start, markerEnd + 1, Decoration.replace({ widget: new BulletWidget() }));
             if (bullet[3].length > 1) pushReplace(markerEnd + 1, spaceEnd, hidden);
           }
         } else {
