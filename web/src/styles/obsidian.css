@@ -1736,6 +1736,17 @@ body.wo-col-resizing .sidebar, body.wo-col-resizing .right-sidebar { transition:
 .cm-image-wrap:hover .cm-image-resize,
 .cm-image-wrap.is-resizing .cm-image-resize { opacity: .9; }
 
+/* ---- External media embeds (YouTube / Instagram / Facebook) ---- */
+.external-embed { display: block; width: 100%; max-width: 100%; margin: 8px 0; line-height: 0; }
+.external-embed iframe {
+  display: block; width: 100%; max-width: 100%; border: 0;
+  border-radius: var(--radius); background: var(--background-secondary, #000);
+}
+.external-embed-video iframe { aspect-ratio: 16 / 9; height: auto; }
+.external-embed-portrait iframe { aspect-ratio: 9 / 16; height: auto; max-width: 360px; max-height: 80vh; }
+.external-embed-post iframe { height: 600px; max-width: 540px; }
+.cm-external-embed-wrap { display: block; }
+
 /* ---- Embedded audio/video players: `![[clip.mp4]]` / `![[song.mp3]]` ---- */
 .cm-media-wrap { display: block; max-width: 100%; line-height: 0; margin: 6px 0; }
 video.media-embed {

@@ -433,8 +433,14 @@ Cập nhật lần cuối: 2026-10-15 (link preview card #7; trước đó 2026-
       web/server/desktop OK. Workflow fork đang active; push annotated tag `v0.1.2` để CI tạo draft release,
       chỉ Publish sau khi cả ba runner hoàn thành.
 
+- [x] M27.7 External media embeds (#6): URL YouTube/Instagram/Facebook đứng riêng một dòng render inline
+      (Reading, Live Preview, Public Share); whitelist trong `web/src/lib/embeds.ts` (+ bản server), iframe
+      dựng lại từ ID đã validate sau sanitize; CSP `frame-src` chỉ thêm 3 domain.
+
 ### Nhật ký tiến độ
 
+- 2026-10-14 (External media embeds #6): thêm `resolveExternalEmbed` + rehype plugin chạy sau sanitize,
+  widget Live Preview, CSS responsive. Typecheck OK; kiểm chứng render server (HTML iframe thô bị loại).
 - 2026-10-13 (release v0.1.2 — cấu hình đã kiểm chứng): root/desktop + lockfile đồng bộ `0.1.2`;
   publish target/homepage/download links trỏ về fork. `npm ci`, typecheck root + desktop, build
   web/server + desktop bundle đều OK sau thay đổi. Nội dung kể từ v0.1.1: fix dark-mode contrast/cursor
