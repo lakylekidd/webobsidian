@@ -6,6 +6,27 @@ changes. The format is loosely based on [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-15
+
+### Added
+- **Inline media embeds** — a YouTube, Instagram or Facebook link alone on a line renders as
+  a player in Live and Reading modes and on public share pages. Only whitelisted providers
+  embed; the iframe URL is rebuilt from validated IDs and sandboxed.
+- **Link preview cards** — a pasted URL alone on a line becomes a rich card (title,
+  description, thumbnail, domain). Metadata is fetched server-side with SSRF protection
+  (private/loopback addresses blocked, redirects re-validated, size and time capped); links
+  that cannot be previewed stay plain. `GET /api/linkpreview`.
+- **Multi-cursor editing** — Option/Alt+Click adds a cursor, Shift+Alt+Drag selects a
+  column, Esc returns to a single cursor.
+- **Hanging indent for lists** — wrapped lines in bullets, tasks and ordered lists align
+  under the text instead of the marker (nested lists and multi-digit numbers included).
+- **YAML front matter highlighting** in Source mode (new dependency `@codemirror/lang-yaml`).
+
+### Fixed
+- Alt+Click no longer collapses multi-cursor selections in Live Preview.
+
+## [0.1.3] and earlier
+
 ### Added
 - Open-source repository scaffolding: `README.md` (with logo), `LICENSE` (MIT),
   `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, GitHub issue/PR templates and a
