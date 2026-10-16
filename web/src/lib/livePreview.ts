@@ -2240,11 +2240,10 @@ function buildDecorations(view: EditorView): DecorationSet {
         if (bodyStart) return {};
         let units = 0;
         for (let i = 0; i < ws.length; i += ws[i] === '\t' ? 1 : 4) units++;
-        const prefix = [
-          ...Array.from({ length: units }, () => 'var(--hang-indent-w)'),
-          markerW ?? 'var(--hang-marker-w)',
-        ].join(' + ');
-        return { style: `--hang-prefix:calc(${prefix})` };
+        const prefix = [...Array.from({ length: units }, () => 'var(--hang-indent-w)'), 'var(--hang-marker-w)'].join(' + ');
+        // `--hang-marker-w` must be set on the line itself: the ordered-list marker box
+        // (.cm-ol-marker) reads it for its width, so it has to match what the prefix uses.
+        return { style: `${markerW ? `--hang-marker-w:${markerW};` : ''}--hang-prefix:calc(${prefix})` };
       };
       const task = body.match(/^(\s*)([-*+])\s+\[(.)\]\s/);
       if (task) {
