@@ -95,6 +95,19 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Lets the store react to renames/moves (e.g. keep manual sort order) no matter which component
+ * triggered them, without api.ts depending on the store.
+ */
+export interface RenameHook {
+  start(): void;
+  done(from: string, to: string, ok: boolean): void;
+}
+let renameHook: RenameHook | null = null;
+export function setRenameHook(h: RenameHook | null): void {
+  renameHook = h;
+}
+
 export const api = {
   // auth
   authStatus: () => req<{ passwordSet: boolean; mustChangePassword: boolean }>('/auth/status'),
@@ -123,8 +136,17 @@ export const api = {
     req<{ ok: true }>('/api/files/content', { method: 'PUT', body: JSON.stringify({ path, content }) }),
   createFolder: (path: string) =>
     req<{ ok: true }>('/api/files/folder', { method: 'POST', body: JSON.stringify({ path }) }),
-  rename: (from: string, to: string) =>
-    req<{ ok: true }>('/api/files/rename', { method: 'PATCH', body: JSON.stringify({ from, to }) }),
+  rename: async (from: string, to: string) => {
+    renameHook?.start();
+    let ok = false;
+    try {
+      const r = await req<{ ok: true }>('/api/files/rename', { method: 'PATCH', body: JSON.stringify({ from, to }) });
+      ok = true;
+      return r;
+    } finally {
+      renameHook?.done(from, to, ok);
+    }
+  },
   copy: (from: string, to: string) =>
     req<{ ok: true }>('/api/files/copy', { method: 'POST', body: JSON.stringify({ from, to }) }),
   remove: (path: string, permanent = false) =>
