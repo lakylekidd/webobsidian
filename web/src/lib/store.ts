@@ -110,6 +110,7 @@ interface AppState {
   treeSort: TreeSort;
   setTreeSort: (s: TreeSort) => void;
   autoReveal: boolean;
+  setAutoReveal: (v: boolean) => void;
   toggleAutoReveal: () => void;
   /** Show auto-created `attachments/` folders in the file tree (persisted; hidden by default). */
   showAttachmentFolders: boolean;
@@ -362,6 +363,7 @@ export const useStore = create<AppState>()(
       treeSort: 'name-asc',
       setTreeSort: (treeSort) => set({ treeSort }),
       autoReveal: false,
+      setAutoReveal: (autoReveal) => set({ autoReveal }),
       toggleAutoReveal: () => set((s) => ({ autoReveal: !s.autoReveal })),
       showAttachmentFolders: false,
       setShowAttachmentFolders: (showAttachmentFolders) => set({ showAttachmentFolders }),
