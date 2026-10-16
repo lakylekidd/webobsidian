@@ -393,6 +393,19 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
               {node.name}
             </span>
           )}
+          {!editing && (
+            <button
+              className="tree-del"
+              title="Delete"
+              aria-label={`Delete ${node.name}`}
+              draggable={false}
+              onClick={(e) => { e.stopPropagation(); void doDelete(); }}
+              onDoubleClick={(e) => e.stopPropagation()}
+              onContextMenu={(e) => e.stopPropagation()}
+            >
+              <Icon name="trash" size={13} />
+            </button>
+          )}
         </div>
         {open && (
           <div className="tree-children">
@@ -438,6 +451,19 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
           <Icon name="globe" size={12} className="share-globe" />
         )}
         {bookmarks.includes(node.path) && <Icon name="bookmark" size={12} className="bm-star" />}
+        {!editing && (
+          <button
+          className="tree-del"
+          title="Delete"
+          aria-label={`Delete ${node.name}`}
+          draggable={false}
+          onClick={(e) => { e.stopPropagation(); void doDelete(); }}
+          onDoubleClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.stopPropagation()}
+          >
+          <Icon name="trash" size={13} />
+          </button>
+        )}
       </div>
     </div>
   );

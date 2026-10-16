@@ -1823,3 +1823,11 @@ audio.media-embed { display: block; width: min(100%, 480px); max-width: 100%; ma
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 @media (max-width: 480px) { .link-preview-thumb { flex-basis: 96px; } }
+
+.tree-row .tree-del {
+  display: none; margin-left: auto; padding: 2px; border: 0; background: transparent;
+  color: var(--text-faint); cursor: pointer; flex-shrink: 0; border-radius: 4px; line-height: 0;
+}
+.tree-row:hover .tree-del { display: grid; place-items: center; }
+.tree-row .tree-del:hover { color: var(--text-error, #e5484d); background: var(--bg-modifier-hover); }
+.tree-row .bm-star + .tree-del { margin-left: 4px; }
