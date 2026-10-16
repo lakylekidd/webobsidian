@@ -450,7 +450,7 @@ Cập nhật lần cuối: 2026-10-16 (floating document outline #32; ẩn thư 
 - [x] M30.2 Ghi thời điểm vào trash: `services/trashindex.ts` (`<trash>/.trash-index.json`, khoá theo path, lock tuần tự, guard path escape); `vault.trash()` ghi, restore/xoá item cập nhật; `listTrash` trả thời điểm xoá thật.
 - [x] M30.3 Purge: `services/trashretention.ts` — chạy sau khi khởi động (15s), mỗi giờ và ngay khi đổi setting; item chưa có index được backfill = "now" (không xoá ngay trash cũ); chỉ log số lượng, không log tên.
 
-## Phase 31 — Local attachment folders + xoá ảnh (FR-1/FR-2, PRD 1.11, issue #30)
+## Phase 31 — Local attachment folders + xoá ảnh (FR-1/FR-2, PRD 1.9, issue #30)
 - [x] M31.1 Dán/drop ảnh → `<thư-mục-note>/attachments/` (tự tạo, tên unique), chèn `![](attachments/x.png)` tại caret.
 - [x] M31.2 Server: `GET /files/content|resolve` nhận `from` (resolve tương đối theo note, fallback basename); `GET /files/references`; `DELETE /files?permanent=1`.
 - [x] M31.3 Icon thùng rác khi hover ảnh (Live Preview + Reading): gỡ tham chiếu, kiểm tra tham chiếu khác, xoá vĩnh viễn hoặc cảnh báo + chỉ gỡ khỏi note.
