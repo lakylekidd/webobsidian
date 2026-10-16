@@ -1782,6 +1782,19 @@ body.wo-col-resizing .sidebar, body.wo-col-resizing .right-sidebar { transition:
 .cm-image-resize-right { right: 5px; }
 .cm-image-wrap:hover .cm-image-resize,
 .cm-image-wrap.is-resizing .cm-image-resize { opacity: .9; }
+/* Trash icon (top-right) — appears on hover in Live Preview and Reading mode. */
+.cm-image-delete {
+  position: absolute; top: 8px; right: 8px; z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; line-height: 1; border-radius: 6px;
+  background: var(--background-secondary, rgba(0,0,0,.6)); color: var(--text-muted);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: 0 1px 3px rgba(0,0,0,.35);
+  opacity: 0; pointer-events: none; cursor: pointer; transition: opacity .12s ease, color .12s ease;
+}
+.cm-image-wrap:hover .cm-image-delete { opacity: .95; pointer-events: auto; }
+.cm-image-delete:hover { color: var(--text-error, #e5534b); opacity: 1; }
+.cm-image-wrap.is-resizing .cm-image-delete { display: none; }
 
 /* ---- External media embeds (YouTube / Instagram / Facebook) ---- */
 .external-embed { display: block; width: 100%; max-width: 100%; margin: 8px 0; line-height: 0; }

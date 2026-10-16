@@ -6,6 +6,7 @@ import { pathToUrl } from '../lib/urlsync';
 import Icon from './Icon';
 import { humanizeTitle } from '../lib/title';
 import { confirmDialog } from '../lib/confirm';
+import { displayChildren } from '../lib/attachments';
 
 /** Inline rename box shown in place of a tree row's name (Obsidian-style). */
 function RenameInput({ node, onDone }: { node: TreeNode; onDone: () => void }) {
@@ -235,7 +236,8 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
   const doDelete = async () => {
     let detail: string | undefined;
     if (node.type === 'folder') {
-      const n = countDescendants(node);
+      // count from the raw tree: the rendered node omits hidden attachment folders
+      const n = countDescendants(findNode(useStore.getState().tree, node.path) ?? node);
       detail = n
         ? `The folder and its contents (${n} item${n === 1 ? '' : 's'}) will be removed.`
         : 'The empty folder will be removed.';
@@ -533,7 +535,7 @@ export function collectFolderPaths(root: TreeNode | null): string[] {
  * applies to files. Only rendered (expanded) folders' children are shown, so
  * this naturally sorts just what's visible in the panel.
  */
-function sortTree(node: TreeNode, order: TreeSort): TreeNode {
+function sortTree(node: TreeNode, order: TreeSort, showAttachments: boolean): TreeNode {
   if (!node.children) return node;
   const cmp = (a: TreeNode, b: TreeNode): number => {
     if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
@@ -547,8 +549,10 @@ function sortTree(node: TreeNode, order: TreeSort): TreeNode {
       default: return a.name.localeCompare(b.name); // name-asc
     }
   };
-  const children = node.children
-    .map((c) => (c.type === 'folder' ? sortTree(c, order) : c))
+  // Hidden attachment folders are dropped from this render copy only; the raw store tree
+  // (used for name collisions, delete counts, etc.) still contains them.
+  const children = displayChildren(node.children, showAttachments)
+    .map((c) => (c.type === 'folder' ? sortTree(c, order, showAttachments) : c))
     .sort(cmp);
   return { ...node, children };
 }
@@ -556,7 +560,8 @@ function sortTree(node: TreeNode, order: TreeSort): TreeNode {
 export default function FileTree() {
   const rawTree = useStore((s) => s.tree);
   const treeSort = useStore((s) => s.treeSort);
-  const tree = rawTree ? sortTree(rawTree, treeSort) : rawTree;
+  const showAttachmentFolders = useStore((s) => s.showAttachmentFolders);
+  const tree = rawTree ? sortTree(rawTree, treeSort, showAttachmentFolders) : rawTree;
   const loadTree = useStore((s) => s.loadTree);
   const notify = useStore((s) => s.notify);
   const closeTab = useStore((s) => s.closeTab);

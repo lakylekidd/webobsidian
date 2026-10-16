@@ -68,6 +68,8 @@ function Row({ name, desc, children }: { name: string; desc?: string; children: 
 }
 
 function VaultSettings({ s, reload }: { s: any; reload: () => void }) {
+  const showAttachmentFolders = useStore((st) => st.showAttachmentFolders);
+  const setShowAttachmentFolders = useStore((st) => st.setShowAttachmentFolders);
   const [path, setPath] = useState(s.vault.path);
   const [deleteMode, setDeleteMode] = useState(s.vault.deleteMode ?? 'trash');
   const [retention, setRetention] = useState(String(s.vault.trashRetentionDays ?? 30));
@@ -135,6 +137,16 @@ function VaultSettings({ s, reload }: { s: any; reload: () => void }) {
           <option value="trash">Move to .trash (recoverable)</option>
           <option value="permanent">Permanently delete</option>
         </select>
+      </Row>
+      <Row
+        name="Show attachment folders"
+        desc={'Pasted images are stored in an "attachments" folder next to each note. Hidden in the file tree by default; folders that contain notes are never hidden.'}
+      >
+        <input
+          type="checkbox"
+          checked={showAttachmentFolders}
+          onChange={(e) => setShowAttachmentFolders(e.target.checked)}
+        />
       </Row>
       <Row
         name="Trash retention (days)"

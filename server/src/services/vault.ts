@@ -242,6 +242,25 @@ export async function copy(from: string, to: string): Promise<string[]> {
   return out;
 }
 
+/**
+ * After a file inside an `attachments/` folder was deleted or trashed, remove that folder if it
+ * is now empty (it was auto-created for pasted images, so an empty one is just clutter).
+ * Never touches the vault root, non-attachment folders, or a folder that still has content.
+ * Keep the name in sync with ATTACHMENT_DIR_NAME in web/src/lib/attachments.ts.
+ */
+export async function pruneEmptyAttachmentsDir(relFile: string): Promise<boolean> {
+  const dir = path.posix.dirname(relFile);
+  if (dir === '.' || path.posix.basename(dir).toLowerCase() !== 'attachments') return false;
+  try {
+    const abs = await resolveInVault(dir);
+    if ((await fs.readdir(abs)).length > 0) return false;
+    await fs.rmdir(abs); // rmdir only succeeds on an empty directory
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Permanently delete a file or folder (no trash). */
 export async function remove(rel: string): Promise<void> {
   const abs = await resolveInVault(rel);
