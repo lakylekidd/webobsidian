@@ -282,11 +282,13 @@ filesRouter.delete(
     qmd.remove(rel);
     if (s.vault.deleteMode === 'permanent' || req.query.permanent === '1') {
       await vault.remove(rel);
+      await vault.pruneEmptyAttachmentsDir(rel);
       reindex({ removed: rel });
       res.json({ ok: true, deleted: rel });
       return;
     }
     const dest = await vault.trash(rel);
+    await vault.pruneEmptyAttachmentsDir(rel);
     reindex({ removed: rel });
     res.json({ ok: true, trashed: dest });
   }),

@@ -1,5 +1,6 @@
 import { useStore, GRAPH_PATH, type ContextMenuItem } from '../lib/store';
 import { api } from '../lib/api';
+import { ATTACHMENT_DIR_NAME } from '../lib/attachments';
 import Editor from './Editor';
 import Preview from './Preview';
 import GraphView from './GraphView';
@@ -264,7 +265,7 @@ export default function Workspace() {
   const handleFiles = async (files: FileList | File[]) => {
     const isNote = !!activePath && /\.(md|markdown)$/i.test(activePath);
     const noteDir = activePath && isNote ? activePath.split('/').slice(0, -1).join('/') : '';
-    const dir = isNote ? (noteDir ? `${noteDir}/attachments` : 'attachments') : 'attachments';
+    const dir = isNote && noteDir ? `${noteDir}/${ATTACHMENT_DIR_NAME}` : ATTACHMENT_DIR_NAME;
     let text = content;
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) continue;
