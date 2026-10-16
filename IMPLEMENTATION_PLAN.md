@@ -4,7 +4,7 @@
 > Quy ước: `[ ]` chưa làm · `[~]` đang làm · `[x]` xong.
 > Cập nhật file này **mỗi khi** một mục thay đổi trạng thái.
 
-Cập nhật lần cuối: 2026-10-16 (double-click inline rename trong file tree #19; trước đó 2026-10-15: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
+Cập nhật lần cuối: 2026-10-16 (trash retention; double-click inline rename trong file tree #19; trước đó 2026-10-15: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
 
 ---
 
@@ -441,6 +441,11 @@ Cập nhật lần cuối: 2026-10-16 (double-click inline rename trong file tre
 - [x] M28.1 Double-click tên file/folder để vào inline rename qua `RenameInput` hiện có; giữ Rename context menu,
       Enter xác nhận, Escape huỷ, click đơn vẫn xử lý bình thường. Web typecheck + production build sạch.
       `Editor.tsx` không `v.focus()` khi đang rename (double-click note chưa mở: editor mount cướp focus làm input bị blur/đóng).
+
+## Phase 30 — Trash retention (FR-1, PRD 1.8)
+- [x] M30.1 Setting `vault.trashRetentionDays` (int 0–3650, mặc định 30; 0 = giữ mãi) + validate ở `PUT /api/settings` + ô nhập trong Settings → Vault & Files.
+- [x] M30.2 Ghi thời điểm vào trash: `services/trashindex.ts` (`<trash>/.trash-index.json`, khoá theo path, lock tuần tự, guard path escape); `vault.trash()` ghi, restore/xoá item cập nhật; `listTrash` trả thời điểm xoá thật.
+- [x] M30.3 Purge: `services/trashretention.ts` — chạy sau khi khởi động (15s), mỗi giờ và ngay khi đổi setting; item chưa có index được backfill = "now" (không xoá ngay trash cũ); chỉ log số lượng, không log tên.
 
 ### Nhật ký tiến độ
 
@@ -1296,3 +1301,4 @@ Cập nhật lần cuối: 2026-10-16 (double-click inline rename trong file tre
 - 2026-10-15: Multi-cursor & column selection (issue #10) — `Editor.tsx`: allowMultipleSelections, Alt+Click thêm cursor, Shift+Alt+Drag chọn cột (rectangularSelection), Escape về 1 cursor (simplifySelection); `livePreview.ts` `editorClickFix` bỏ qua Alt+Click để không collapse multi-cursor. Verify: typecheck sạch; test thủ công Alt+Click thêm cursor + Escape (Source mode); Shift+Alt+Drag chưa kiểm chứng.
 - 2026-10-15: Hanging indent cho list/task/ordered list (Live Preview) — `livePreview.ts` (`hang()` đặt `--hang-units`/`--hang-marker-w`, class `HyperMD-hang`; ordered list: marker `1.` bọc `cm-ol-marker` rộng cố định theo số chữ số, khoảng trắng sau marker ẩn khi caret không chạm), `obsidian.css` (padding-left + text-indent âm). Không áp dụng trong quote/callout. Verify: typecheck sạch; đo pixel dòng wrap == dòng đầu cho bullet/task/lồng nhau/ordered 1–3 chữ số; trạng thái raw khi caret chạm marker ổn định.
 - 2026-10-15: Highlight YAML front matter trong Source mode (issue #9) — `Editor.tsx` dùng `yamlFrontmatter` (@codemirror/lang-yaml) bọc markdown; `highlight.ts` thêm style `meta` cho `---`. Verify: typecheck.
+- 2026-10-16: Trash retention (PRD 1.8) — setting `vault.trashRetentionDays` (30 mặc định), index thời điểm xoá `.trash-index.json`, purge khi khởi động/mỗi giờ/đổi setting. Verify: typecheck sạch; test thủ công — item 31 ngày bị xoá, 29 ngày giữ; file mtime 2020 vừa xoá không bị purge; folder hết hạn xoá cả cây; retention 0 giữ; giá trị sai (99999, chữ, số lẻ, âm) bị bỏ qua; UI lưu/giữ lại giá trị cũ khi nhập sai.
