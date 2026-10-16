@@ -42,9 +42,9 @@ import {
 import { renderMarkdown } from '../lib/markdown';
 import { setActiveEditor } from '../lib/activeEditor';
 import { api } from '../lib/api';
+import { humanizeTitle } from '../lib/title';
 
-const titleOf = (path: string | null) =>
-  path ? (path.split('/').pop() ?? path).replace(/\.(md|markdown)$/i, '') : '';
+const titleOf = (path: string | null) => (path ? humanizeTitle(path) : '');
 
 // Reading mode = the same Live Preview editor, made read-only via this compartment.
 const readonlyExt = (reading: boolean) =>

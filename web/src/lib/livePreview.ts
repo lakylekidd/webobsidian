@@ -6,6 +6,7 @@ import {
   ViewUpdate,
   WidgetType,
 } from '@codemirror/view';
+import { frontmatterTitle } from './title';
 import { StateField, StateEffect, type EditorState, type Range, type Text } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
 import { CALLOUT_SLOT, CALLOUT_RE, calloutDefaultTitle, calloutIconSvg } from './callouts';
@@ -2605,8 +2606,9 @@ export const noteTitleField = StateField.define<string>({
 
 function buildInlineTitle(state: EditorState): DecorationSet {
   if (!state.field(livePreviewState, false)) return Decoration.none;
-  const title = state.field(noteTitleField, false) ?? '';
-  if (!title) return Decoration.none;
+  const baseTitle = state.field(noteTitleField, false) ?? '';
+  if (!baseTitle) return Decoration.none;
+  const title = frontmatterTitle(state.doc.sliceString(0, Math.min(state.doc.length, 2000))) ?? baseTitle;
   // Skip when the note already opens with an H1 equal to the title — the Trilium
   // export repeats the title as a heading, and Obsidian would otherwise show it twice.
   const head = state.doc.sliceString(0, Math.min(state.doc.length, 2000));
