@@ -1842,6 +1842,10 @@ audio.media-embed { display: block; width: min(100%, 480px); max-width: 100%; ma
 .tree-row .tree-del:hover { color: var(--text-error, #e5484d); background: var(--bg-modifier-hover); }
 .tree-row .tree-del:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 1px; }
 .tree-row .bm-star + .tree-del { margin-left: 4px; }
+/* Touch: no hover, and an icon on every row is clutter plus accidental-tap bait. Tapping a
+   row selects it, so only the selected row shows the button (larger tap target); on the
+   others it is invisible AND inert so stray taps near the row's edge can't trigger it. */
 @media (hover: none), (pointer: coarse) {
-  .tree-row .tree-del { opacity: 1; padding: 8px; margin-block: -6px; }
+  .tree-row .tree-del { opacity: 0; pointer-events: none; padding: 8px; margin-block: -6px; }
+  .tree-row.selected .tree-del { opacity: 1; pointer-events: auto; }
 }
