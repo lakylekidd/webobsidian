@@ -178,6 +178,7 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
   // Click selection: plain = single (+open/toggle), Cmd/Ctrl = toggle one,
   // Shift = range from the anchor across the visible rows (like Obsidian/Finder).
   const onRowClick = (e: React.MouseEvent) => {
+    if (e.detail > 1) return;
     if (e.metaKey || e.ctrlKey) {
       const cur = useStore.getState().selected;
       setSelected(cur.includes(node.path) ? cur.filter((p) => p !== node.path) : [...cur, node.path]);
@@ -388,7 +389,9 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
           {editing ? (
             <RenameInput node={node} onDone={() => setRenamingPath(null)} />
           ) : (
-            <span className="name">{node.name}</span>
+            <span className="name" onDoubleClick={(e) => { e.preventDefault(); e.stopPropagation(); doRename(); }}>
+              {node.name}
+            </span>
           )}
         </div>
         {open && (
@@ -427,7 +430,9 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
         {editing ? (
           <RenameInput node={node} onDone={() => setRenamingPath(null)} />
         ) : (
-          <span className="name">{/\.(md|markdown)$/i.test(node.name) ? humanizeTitle(node.name) : node.name}</span>
+          <span className="name" onDoubleClick={(e) => { e.preventDefault(); e.stopPropagation(); doRename(); }}>
+            {/\.(md|markdown)$/i.test(node.name) ? humanizeTitle(node.name) : node.name}
+          </span>
         )}
         {shares.some((s) => s.path === node.path && s.enabled) && (
           <Icon name="globe" size={12} className="share-globe" />
