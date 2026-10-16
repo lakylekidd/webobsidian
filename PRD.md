@@ -1,7 +1,8 @@
 # PRD — WebObsidian
 
 > Product Requirements Document
-> Phiên bản: 1.8 · Cập nhật: 2026-10-16 · Trạng thái: Draft
+> Phiên bản: 1.9 · Cập nhật: 2026-10-16 · Trạng thái: Draft
+> Changelog 1.9 (FR-2 — Floating document outline, issue #32): Live/Reading view hiển thị outline nổi ở lề phải: mỗi heading `#`–`######` là một marker (độ dài theo cấp), marker của section đang xem được làm nổi theo scroll; hover mở rộng thành mục lục có thụt lề, click marker/mục cuộn mượt tới heading. Ẩn khi note không có heading, ở Source mode, khi pane hẹp (<760px) hoặc khi in. Cập nhật tự động khi sửa heading. (Các setting vị trí/độ sâu/min headings để sau.)
 > Changelog 1.8 (FR-1 — Trash retention): thêm setting `vault.trashRetentionDays` (mặc định **30**, `0` = giữ mãi) trong Settings → Vault & Files. Item trong `.trash` bị **xoá vĩnh viễn** sau số ngày này, tính từ **thời điểm item được chuyển vào trash** (không phải mtime của file — `rename` giữ nguyên mtime gốc). Thời điểm ghi trong `<trash>/.trash-index.json`; item có sẵn trong trash trước tính năng được bắt đầu tính từ lần quét đầu tiên (không bị xoá ngay). Dọn lúc khởi động, mỗi giờ và ngay khi đổi setting; chỉ tác động trong `.trash`.
 > Changelog 1.7 (FR-1 — Inline rename từ file tree, issue #19): double-click tên file, folder hoặc canvas để vào inline rename; Enter xác nhận, Escape huỷ. Giữ Rename trong context menu và dùng cùng validation hiện có.
 > Changelog 1.6 (FR-2 — Link preview card, issue #7): URL đứng riêng một dòng render thành thẻ preview (thumbnail, title, mô tả 2 dòng, domain) ở Reading view, Live Preview và trang Public share; Markdown gốc giữ nguyên, lỗi fetch → link thường. Server fetch metadata an toàn (chặn IP nội bộ, giới hạn redirect/size/timeout, chỉ lấy OG text) qua provider chain mở rộng được.

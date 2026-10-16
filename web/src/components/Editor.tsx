@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import DocOutline from './DocOutline';
 import { Compartment, EditorState, Prec } from '@codemirror/state';
 import { EditorView, keymap, highlightActiveLine, drawSelection, rectangularSelection, crosshairCursor } from '@codemirror/view';
 import { defaultKeymap, simplifySelection, history, historyKeymap, indentWithTab } from '@codemirror/commands';
@@ -53,6 +54,7 @@ const readonlyExt = (reading: boolean) =>
 export default function Editor() {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
+  const [editorView, setEditorView] = useState<EditorView | null>(null);
   const readonlyComp = useRef(new Compartment()).current;
   const applyingExternal = useRef(false);
   const activePath = useStore((s) => s.activePath);
@@ -304,6 +306,7 @@ export default function Editor() {
     });
     const v = new EditorView({ state, parent: host.current });
     view.current = v;
+    setEditorView(v);
     setActiveEditor(v);
     // Don't steal focus from the file tree's inline rename box (double-click on a
     // note that isn't open yet opens it, then enters rename).
@@ -364,5 +367,11 @@ export default function Editor() {
     viewMode !== 'source' ? 'is-live-preview live-preview' : '',
     viewMode === 'reading' ? 'is-reading-mode' : '',
   ].join(' ');
-  return <div className={cls} ref={host} onContextMenu={onContextMenu} />;
+  const showOutline = viewMode !== 'source' && !!activePath && /\.(md|markdown)$/i.test(activePath);
+  return (
+    <div className="cm-outline-wrap">
+      <div className={cls} ref={host} onContextMenu={onContextMenu} />
+      {showOutline && <DocOutline view={editorView} content={content} />}
+    </div>
+  );
 }
