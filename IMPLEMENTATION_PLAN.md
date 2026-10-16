@@ -452,6 +452,9 @@ Cập nhật lần cuối: 2026-10-16 (trash retention; fix hanging indent list/
 
 ### Nhật ký tiến độ
 
+- 2026-10-16 (Quick create #23): hover thư mục trong file tree hiện icon New note / New canvas ở bên phải; tạo
+  trong thư mục đó và vào inline rename ngay (newCanvas dùng cùng luồng rename như newNote). Chưa chạy được
+  typecheck/build trong môi trường này (thiếu deps).
 - 2026-10-16 (Issue #20): hanging indent không ổn định do phép nhân trong CSS `calc()` khi tạo prefix và negative indent. Thay bằng chuỗi phép cộng theo số cấp lồng, cùng phép trừ tương thích hơn với Edge. Verify: typecheck/build sạch; Chromium xác nhận wrapped line thẳng hàng cho bullet, numbered, task và nested list.
 - 2026-10-16 (Double-click rename #19): dùng lại inline rename hiện có cho tên file tree, bỏ xử lý click lần hai
   để tránh mở/toggle thêm; giữ nguyên luồng context menu. Web typecheck + production build sạch.

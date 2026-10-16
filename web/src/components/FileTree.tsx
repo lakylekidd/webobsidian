@@ -414,6 +414,32 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
           )}
           {!editing && (
             <button
+              className="tree-del tree-add"
+              title="New note"
+              aria-label={`New note in ${node.name}`}
+              draggable={false}
+              onClick={(e) => { e.stopPropagation(); void newNote(node.path); }}
+              onDoubleClick={(e) => e.stopPropagation()}
+              onContextMenu={(e) => e.stopPropagation()}
+            >
+              <Icon name="file-plus" size={13} />
+            </button>
+          )}
+          {!editing && (
+            <button
+              className="tree-del tree-add"
+              title="New canvas"
+              aria-label={`New canvas in ${node.name}`}
+              draggable={false}
+              onClick={(e) => { e.stopPropagation(); void newCanvas(node.path); }}
+              onDoubleClick={(e) => e.stopPropagation()}
+              onContextMenu={(e) => e.stopPropagation()}
+            >
+              <Icon name="layout-dashboard" size={13} />
+            </button>
+          )}
+          {!editing && (
+            <button
               className="tree-del"
               title="Delete"
               aria-label={`Delete ${node.name}`}
