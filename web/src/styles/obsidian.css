@@ -1830,10 +1830,18 @@ audio.media-embed { display: block; width: min(100%, 480px); max-width: 100%; ma
 }
 @media (max-width: 480px) { .link-preview-thumb { flex-basis: 96px; } }
 
+/* Quick delete. Hidden with opacity (not display:none) so it stays in the tab order:
+   it fades in on row hover, row focus-within, and its own keyboard focus. Touch /
+   coarse-pointer devices have no hover, so it is always visible there. */
 .tree-row .tree-del {
-  display: none; margin-left: auto; padding: 2px; border: 0; background: transparent;
-  color: var(--text-faint); cursor: pointer; flex-shrink: 0; border-radius: 4px; line-height: 0;
+  display: grid; place-items: center; opacity: 0; margin-left: auto; padding: 2px; border: 0;
+  background: transparent; color: var(--text-faint); cursor: pointer; flex-shrink: 0;
+  border-radius: 4px; line-height: 0;
 }
-.tree-row:hover .tree-del { display: grid; place-items: center; }
+.tree-row:hover .tree-del, .tree-row:focus-within .tree-del, .tree-row .tree-del:focus-visible { opacity: 1; }
 .tree-row .tree-del:hover { color: var(--text-error, #e5484d); background: var(--bg-modifier-hover); }
+.tree-row .tree-del:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 1px; }
 .tree-row .bm-star + .tree-del { margin-left: 4px; }
+@media (hover: none), (pointer: coarse) {
+  .tree-row .tree-del { opacity: 1; padding: 8px; margin-block: -6px; }
+}

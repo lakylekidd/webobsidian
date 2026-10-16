@@ -25,6 +25,13 @@ export default function ConfirmDialog() {
           if (e.key === 'Escape') {
             e.stopPropagation();
             cancel();
+          } else if (e.key === 'Tab') {
+            // Keep focus inside the dialog: cycle Cancel <-> action button.
+            const btns = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('button'));
+            const i = btns.indexOf(document.activeElement as HTMLButtonElement);
+            const next = e.shiftKey ? (i <= 0 ? btns.length - 1 : i - 1) : i === btns.length - 1 ? 0 : i + 1;
+            e.preventDefault();
+            btns[next]?.focus();
           }
         }}
       >
