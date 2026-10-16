@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { isInsideHiddenAttachmentFolder } from './attachments';
-import { api, type TreeNode, type ShareRecord } from './api';
+import { api, setRenameHook, type TreeNode, type ShareRecord } from './api';
 import { findNode } from './tree';
 
 /** Per-tab id so we can ignore the echo of our own server-pushed state change. */
@@ -276,6 +276,34 @@ function parseManualOrder(input: unknown): Record<string, string[]> {
   return out;
 }
 
+const parentOfPath = (p: string) => (p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '');
+
+/**
+ * Carry manual order across a rename/move so the item keeps its place:
+ *  - same folder (rename): the item keeps its slot in that folder's order;
+ *  - a renamed/moved FOLDER takes its children's order with it (keys and values are re-prefixed);
+ *  - moved to another folder: dropped from the old folder's order and appended to the end of the
+ *    new folder's order (when that folder has a manual order; otherwise it just uses the default).
+ */
+function remapManualOrder(order: Record<string, string[]>, from: string, to: string): Record<string, string[]> {
+  if (!from || from === to) return order;
+  const prefix = `${from}/`;
+  const swap = (p: string) => (p === from ? to : p.startsWith(prefix) ? to + p.slice(from.length) : p);
+  const out: Record<string, string[]> = {};
+  for (const [k, list] of Object.entries(order)) out[swap(k)] = list.map(swap);
+  const fromParent = parentOfPath(from);
+  const toParent = parentOfPath(to);
+  if (fromParent !== toParent) {
+    if (out[fromParent]) out[fromParent] = out[fromParent].filter((p) => p !== to);
+    if (out[toParent]) out[toParent] = [...out[toParent].filter((p) => p !== to), to];
+  }
+  return out;
+}
+
+// Renames/moves currently awaiting the server. While any is pending the tree on screen and the
+// manual order can disagree, so reconciling then would treat the renamed item as "deleted + new".
+let renamesInFlight = 0;
+
 /**
  * Keep manual-order metadata in sync with the live tree:
  * - remove deleted paths,
@@ -368,7 +396,7 @@ export const useStore = create<AppState>()(
       tree: null,
       loadTree: async () => {
         const tree = await api.tree();
-        set((s) => ({ tree, manualOrder: reconcileManualOrder(tree, s.manualOrder) }));
+        set((s) => ({ tree, manualOrder: renamesInFlight > 0 ? s.manualOrder : reconcileManualOrder(tree, s.manualOrder) }));
       },
 
       tabs: [],
@@ -767,4 +795,17 @@ useStore.subscribe((state, prev) => {
   if (JSON.stringify(pickPersisted(state)) !== JSON.stringify(pickPersisted(prev))) {
     scheduleSave();
   }
+});
+
+// Keep manual sort order attached to items when ANY caller renames or moves them (inline rename,
+// drag-and-drop, "Move to…", cut/paste, inline title). Reconcile (which drops order entries for
+// paths that vanished) runs on the next tree load, by which time the order has been remapped.
+setRenameHook({
+  start: () => {
+    renamesInFlight++;
+  },
+  done: (from, to, ok) => {
+    renamesInFlight = Math.max(0, renamesInFlight - 1);
+    if (ok) useStore.setState((s) => ({ manualOrder: remapManualOrder(s.manualOrder, from, to) }));
+  },
 });
