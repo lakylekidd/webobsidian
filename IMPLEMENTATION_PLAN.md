@@ -4,7 +4,7 @@
 > Quy ước: `[ ]` chưa làm · `[~]` đang làm · `[x]` xong.
 > Cập nhật file này **mỗi khi** một mục thay đổi trạng thái.
 
-Cập nhật lần cuối: 2026-10-16 (double-click inline rename trong file tree #19; trước đó 2026-10-15: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
+Cập nhật lần cuối: 2026-10-16 (fix hanging indent list/task #20; trước đó double-click inline rename #19; hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
 
 ---
 
@@ -442,8 +442,12 @@ Cập nhật lần cuối: 2026-10-16 (double-click inline rename trong file tre
       Enter xác nhận, Escape huỷ, click đơn vẫn xử lý bình thường. Web typecheck + production build sạch.
       `Editor.tsx` không `v.focus()` khi đang rename (double-click note chưa mở: editor mount cướp focus làm input bị blur/đóng).
 
+## Phase 29 — List hanging indent compatibility (FR-2, issue #20)
+- [x] M29.1 Tạo prefix indent bằng phép cộng và phép trừ CSS `calc()` thay phép nhân, để hanging indent hoạt động ổn định trên Edge với bullet, numbered, task và nested lists. Typecheck/build sạch; Chromium xác nhận wrapped line thẳng hàng cho bullet, numbered, task và nested list.
+
 ### Nhật ký tiến độ
 
+- 2026-10-16 (Issue #20): hanging indent không ổn định do phép nhân trong CSS `calc()` khi tạo prefix và negative indent. Thay bằng chuỗi phép cộng theo số cấp lồng, cùng phép trừ tương thích hơn với Edge. Verify: typecheck/build sạch; Chromium xác nhận wrapped line thẳng hàng cho bullet, numbered, task và nested list.
 - 2026-10-16 (Double-click rename #19): dùng lại inline rename hiện có cho tên file tree, bỏ xử lý click lần hai
   để tránh mở/toggle thêm; giữ nguyên luồng context menu. Web typecheck + production build sạch.
   Sửa: double-click note chưa mở → editor mount `v.focus()` làm blur input rename; bỏ focus khi `renamingPath` set. Verify thủ công: note/canvas/folder rename + Escape.
