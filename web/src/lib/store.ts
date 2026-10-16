@@ -571,8 +571,19 @@ export const useStore = create<AppState>()(
         let name = 'Untitled.canvas';
         for (let i = 1; taken.has(name.toLowerCase()); i++) name = `Untitled ${i}.canvas`;
         const path = base ? `${base}/${name}` : name;
-        await get().createNote(path, '{\n\t"nodes":[],\n\t"edges":[]\n}');
-        if (base) get().revealInTree(path);
+        // Same flow as newNote: create, then inline-rename; opened once the rename finishes.
+        await api.write(path, '{\n\t"nodes":[],\n\t"edges":[]\n}');
+        await get().loadTree();
+        if (base) {
+          const ancestors: string[] = [];
+          let acc = '';
+          for (const sg of base.split('/')) { acc = acc ? `${acc}/${sg}` : sg; ancestors.push(acc); }
+          set((st) => ({ expanded: Array.from(new Set([...st.expanded, ...ancestors])) }));
+        }
+        set({ leftPanel: 'files', leftOpen: true, newNotePath: path, renamingPath: path, selected: [path], selectAnchor: path });
+        window.setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('wo-reveal-file', { detail: { path } }));
+        }, 60);
       },
 
       renamingPath: null,

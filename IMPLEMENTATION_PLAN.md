@@ -444,6 +444,9 @@ Cập nhật lần cuối: 2026-10-16 (nút xoá nhanh trong file tree + confirm
 
 ### Nhật ký tiến độ
 
+- 2026-10-16 (Quick create #23): hover thư mục trong file tree hiện icon New note / New canvas ở bên phải; tạo
+  trong thư mục đó và vào inline rename ngay (newCanvas dùng cùng luồng rename như newNote). Chưa chạy được
+  typecheck/build trong môi trường này (thiếu deps).
 - 2026-10-16 (Double-click rename #19): dùng lại inline rename hiện có cho tên file tree, bỏ xử lý click lần hai
   để tránh mở/toggle thêm; giữ nguyên luồng context menu. Web typecheck + production build sạch.
   Sửa: double-click note chưa mở → editor mount `v.focus()` làm blur input rename; bỏ focus khi `renamingPath` set. Verify thủ công: note/canvas/folder rename + Escape.
