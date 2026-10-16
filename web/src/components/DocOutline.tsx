@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { EditorView } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 
 interface Heading {
   level: number;
@@ -69,10 +69,15 @@ export default function DocOutline({ view, content }: { view: EditorView | null;
 
   const go = (h: Heading) => {
     const pos = Math.min(h.pos, view.state.doc.length);
-    const scroller = view.scrollDOM;
-    const block = view.lineBlockAt(pos);
-    const delta = view.documentTop + block.top - scroller.getBoundingClientRect().top;
-    scroller.scrollTo({ top: Math.max(0, scroller.scrollTop + delta - SCROLL_OFFSET), behavior: 'smooth' });
+    // Use CodeMirror's own scroll effect rather than a one-shot scrollTo(lineBlockAt().top):
+    // lines far from the viewport only have ESTIMATED heights until they are rendered, so a
+    // computed offset undershoots in long notes, and a smooth-scroll animation toward it is
+    // cancelled when CodeMirror re-measures and adjusts scrollTop (it stalled thousands of px
+    // short of the heading). scrollIntoView re-measures as it goes; a second pass settles
+    // whatever remains after the first measure.
+    const jump = () => view.dispatch({ effects: EditorView.scrollIntoView(pos, { y: 'start', yMargin: SCROLL_OFFSET }) });
+    jump();
+    window.setTimeout(jump, 150);
   };
 
   return (
