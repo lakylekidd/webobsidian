@@ -261,11 +261,13 @@ export default function Workspace() {
 
   // Paste / drop image → upload to attachments and insert an embed.
   const handleFiles = async (files: FileList | File[]) => {
+    let text = content;
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) continue;
       try {
         const { path } = await api.upload(file);
-        setContent(`${content}\n![[${path}]]\n`);
+        text += `\n![[${path}]]\n`;
+        setContent(text);
         notify(`Inserted ${path}`);
       } catch (e: any) {
         notify(e.message);
