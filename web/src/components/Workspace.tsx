@@ -259,21 +259,38 @@ export default function Workspace() {
     openContextMenu({ x: Math.round(rect.right) - 220, y: Math.round(rect.bottom) + 6, items });
   };
 
-  // Paste / drop image → upload to attachments and insert an embed.
+  // Paste / drop image → upload to an `attachments/` folder next to the note and
+  // insert a relative embed (`![](attachments/x.png)`) at the caret.
   const handleFiles = async (files: FileList | File[]) => {
+    const isNote = !!activePath && /\.(md|markdown)$/i.test(activePath);
+    const noteDir = activePath && isNote ? activePath.split('/').slice(0, -1).join('/') : '';
+    const dir = isNote ? (noteDir ? `${noteDir}/attachments` : 'attachments') : 'attachments';
     let text = content;
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) continue;
       try {
-        const { path } = await api.upload(file);
-        text += `\n![[${path}]]\n`;
-        setContent(text);
+        const { path } = await api.upload(file, dir);
+        const parts = path.split('/');
+        // the server may reuse a differently-cased existing folder → take the real name
+        const rel = parts.slice(-2).join('/');
+        const md = isNote
+          ? `![](${rel.replace(/ /g, '%20').replace(/\(/g, '%28').replace(/\)/g, '%29')})`
+          : `![[${path}]]`;
+        const ed = isNote ? getActiveEditor() : null;
+        if (ed) {
+          const { from, to } = ed.state.selection.main;
+          ed.dispatch({ changes: { from, to, insert: `${md}\n` }, selection: { anchor: from + md.length + 1 }, userEvent: 'input.paste' });
+        } else {
+          text += `\n${md}\n`;
+          setContent(text);
+        }
         notify(`Inserted ${path}`);
       } catch (e: any) {
         notify(e.message);
       }
     }
   };
+
   const onPaste = (e: React.ClipboardEvent) => {
     const imgs = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith('image/'));
     if (imgs.length) {

@@ -32,6 +32,8 @@ import {
   setLivePreviewEnabled,
   setLivePreviewLinkHandler,
   setLivePreviewMenuHandler,
+  setLivePreviewImageDeleteHandler,
+  setLivePreviewNotePath,
   setLivePreviewNoteEmbedProvider,
   setLivePreviewPropertyProvider,
   setLivePreviewPropertyTypes,
@@ -68,6 +70,42 @@ export default function Editor() {
   useEffect(() => {
     setLivePreviewLinkHandler(openWikilink);
   }, [openWikilink]);
+
+  // Trash icon on a rendered image: drop the reference from the note and delete
+  // the attachment file too — unless another note (or another spot in this one)
+  // still uses it, in which case the user may remove just this reference.
+  useEffect(() => {
+    setLivePreviewImageDeleteHandler(async ({ target, view: v, remove }) => {
+      const { notify, loadTree } = useStore.getState();
+      const note = useStore.getState().activePath ?? '';
+      const file = target ? await api.resolveAttachment(target, note).then((r) => r.path).catch(() => null) : null;
+      if (!file) {
+        remove(); // web URL / missing file → only the reference can go
+        return;
+      }
+      const base = (file.split('/').pop() ?? file).toLowerCase();
+      const refs = (await api.references(file, note).catch(() => ({ references: [] as string[] }))).references;
+      // other embeds of the same file left in THIS note (the one being removed is counted once)
+      const doc = v.state.doc.toString().toLowerCase();
+      const inThisNote = doc.split(base).length - 1 + (doc.split(base.replace(/ /g, '%20')).length - 1) > 1;
+      if (refs.length || inThisNote) {
+        const where = refs.length
+          ? `${refs.length} other note${refs.length > 1 ? 's' : ''} (${refs.slice(0, 3).join(', ')}${refs.length > 3 ? ', …' : ''})`
+          : 'elsewhere in this note';
+        if (confirm(`"${file}" is also used in ${where}.\n\nRemove the image from this note only? The file will be kept.`)) remove();
+        return;
+      }
+      if (!confirm(`Remove this image and permanently delete "${file}"?`)) return;
+      remove();
+      try {
+        await api.remove(file, true);
+        await loadTree();
+        notify(`Deleted ${file}`);
+      } catch (e: any) {
+        notify(e.message);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     setLivePreviewMenuHandler(openContextMenu);
@@ -239,6 +277,7 @@ export default function Editor() {
   useEffect(() => {
     if (!host.current) return;
     view.current?.destroy();
+    setLivePreviewNotePath(activePath);
 
     const isMd = activePath ? /\.(md|markdown)$/i.test(activePath) : false;
     // Place the caret after the frontmatter so Properties render immediately.

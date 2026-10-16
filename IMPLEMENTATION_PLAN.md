@@ -4,7 +4,7 @@
 > Quy ước: `[ ]` chưa làm · `[~]` đang làm · `[x]` xong.
 > Cập nhật file này **mỗi khi** một mục thay đổi trạng thái.
 
-Cập nhật lần cuối: 2026-10-16 (trash retention; fix hanging indent list/task #20; nút xoá nhanh trong file tree + confirm trong app; double-click inline rename #19; trước đó: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
+Cập nhật lần cuối: 2026-10-16 (local attachment folders + nút xoá ảnh #30; trash retention; fix hanging indent list/task #20; nút xoá nhanh trong file tree + confirm trong app; double-click inline rename #19; trước đó: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
 
 ---
 
@@ -450,8 +450,15 @@ Cập nhật lần cuối: 2026-10-16 (trash retention; fix hanging indent list/
 - [x] M30.2 Ghi thời điểm vào trash: `services/trashindex.ts` (`<trash>/.trash-index.json`, khoá theo path, lock tuần tự, guard path escape); `vault.trash()` ghi, restore/xoá item cập nhật; `listTrash` trả thời điểm xoá thật.
 - [x] M30.3 Purge: `services/trashretention.ts` — chạy sau khi khởi động (15s), mỗi giờ và ngay khi đổi setting; item chưa có index được backfill = "now" (không xoá ngay trash cũ); chỉ log số lượng, không log tên.
 
+## Phase 31 — Local attachment folders + xoá ảnh (FR-1/FR-2, PRD 1.9, issue #30)
+- [x] M31.1 Dán/drop ảnh → `<thư-mục-note>/attachments/` (tự tạo, tên unique), chèn `![](attachments/x.png)` tại caret.
+- [x] M31.2 Server: `GET /files/content|resolve` nhận `from` (resolve tương đối theo note, fallback basename); `GET /files/references`; `DELETE /files?permanent=1`.
+- [x] M31.3 Icon thùng rác khi hover ảnh (Live Preview + Reading): gỡ tham chiếu, kiểm tra tham chiếu khác, xoá vĩnh viễn hoặc cảnh báo + chỉ gỡ khỏi note.
+
 ### Nhật ký tiến độ
 
+- 2026-10-16 (Local attachments #30): ảnh dán lưu cạnh note + link tương đối; endpoint resolve/references/permanent delete;
+  icon xoá khi hover ảnh. Server + web typecheck sạch; chưa kiểm thử thủ công trên trình duyệt.
 - 2026-10-16 (Quick create #23): hover thư mục trong file tree hiện icon New note / New canvas ở bên phải; tạo
   trong thư mục đó và vào inline rename ngay (newCanvas dùng cùng luồng rename như newNote). Chưa chạy được
   typecheck/build trong môi trường này (thiếu deps).

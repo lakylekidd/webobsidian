@@ -42,6 +42,24 @@ export function setLivePreviewMenuHandler(fn: (m: { x: number; y: number; items:
   openMenu = fn;
 }
 
+/** Path of the note being rendered — relative image refs resolve against its folder. */
+let notePath = '';
+export function setLivePreviewNotePath(p: string | null) {
+  notePath = p ?? '';
+}
+
+/** Trash-icon click on an image: `target` is the raw vault reference (null for web URLs). */
+export interface ImageDeleteRequest {
+  target: string | null;
+  view: EditorView;
+  /** Remove the image's Markdown reference from the note. */
+  remove: () => void;
+}
+let imageDeleteHandler: (r: ImageDeleteRequest) => void = (r) => r.remove();
+export function setLivePreviewImageDeleteHandler(fn: (r: ImageDeleteRequest) => void) {
+  imageDeleteHandler = fn;
+}
+
 export interface PropSuggestion {
   key: string;
   type: string;
@@ -255,9 +273,51 @@ function writeImageWidth(view: EditorView, wrap: HTMLElement, width: number): vo
   }
 }
 
+/**
+ * Remove the image token (`![[img]]` / `![alt](url)`) a rendered image widget
+ * stands for. A line left empty by the removal is dropped with its newline.
+ */
+function removeImageToken(view: EditorView, wrap: HTMLElement): void {
+  let pos: number;
+  try {
+    pos = view.posAtDOM(wrap);
+  } catch {
+    return;
+  }
+  const line = view.state.doc.lineAt(pos);
+  const off = pos - line.from;
+  for (const re of [/!\[\[([^\]]+?)\]\]/g, /!\[([^\]]*)\]\(([^)]+)\)/g]) {
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(line.text))) {
+      if (m.index <= off && off <= m.index + m[0].length) {
+        let from = line.from + m.index;
+        let to = from + m[0].length;
+        if ((line.text.slice(0, m.index) + line.text.slice(m.index + m[0].length)).trim() === '') {
+          from = line.from;
+          to = line.to;
+          if (to < view.state.doc.length) to += 1;
+          else if (from > 0) from -= 1;
+        }
+        view.dispatch({ changes: { from, to, insert: '' }, userEvent: 'delete' });
+        return;
+      }
+    }
+  }
+}
+
+const TRASH_SVG =
+  '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
+
 class ImageWidget extends WidgetType {
   /** `width`/`height` from the Obsidian size param `![[img|300]]` / `![[img|300x200]]`. */
-  constructor(readonly src: string, readonly alt: string, readonly width?: number, readonly height?: number) {
+  constructor(
+    readonly src: string,
+    readonly alt: string,
+    readonly width?: number,
+    readonly height?: number,
+    /** Raw vault reference (null for web URLs) — what the trash icon deletes. */
+    readonly target: string | null = null,
+  ) {
     super();
   }
   eq(o: ImageWidget) {
@@ -288,6 +348,24 @@ class ImageWidget extends WidgetType {
       openLightbox(this.src, this.alt);
     });
     wrap.appendChild(img);
+
+    // Hover trash icon (top-right) — removes the reference and, when nothing else
+    // uses the file, the attachment itself (decided by the delete handler).
+    const del = document.createElement('span');
+    del.className = 'cm-image-delete';
+    del.title = 'Delete image';
+    del.setAttribute('role', 'button');
+    del.innerHTML = TRASH_SVG;
+    del.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    del.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      imageDeleteHandler({ target: this.target, view, remove: () => removeImageToken(view, wrap) });
+    });
+    wrap.appendChild(del);
 
     // Drag-to-resize — left/right edge bars; width is written back as `|W`,
     // keeping aspect ratio (height auto), like Obsidian's image resize.
@@ -1942,7 +2020,9 @@ const EMPHASIS_CLASS: Record<string, string> = {
 const hidden = Decoration.replace({});
 
 function attachmentUrl(target: string): string {
-  return `/api/files/content?path=${encodeURIComponent(target)}`;
+  return `/api/files/content?path=${encodeURIComponent(target)}${
+    notePath ? `&from=${encodeURIComponent(notePath)}` : ''
+  }`;
 }
 
 function buildDecorations(view: EditorView): DecorationSet {
@@ -2443,7 +2523,7 @@ function buildDecorations(view: EditorView): DecorationSet {
               h = sm[2] ? Number(sm[2]) : undefined;
             }
           }
-          pushReplace(s, e, Decoration.replace({ widget: new ImageWidget(attachmentUrl(href), href, w, h) }));
+          pushReplace(s, e, Decoration.replace({ widget: new ImageWidget(attachmentUrl(href), href, w, h, href) }));
         } else if (isEmbed && (VIDEO_EXT_RE.test(href) || AUDIO_EXT_RE.test(href))) {
           // `![[clip.mp4]]` / `![[song.mp3]]` → native HTML5 player like Obsidian.
           const kind = VIDEO_EXT_RE.test(href) ? 'video' : 'audio';
@@ -2502,8 +2582,17 @@ function buildDecorations(view: EditorView): DecorationSet {
         // Browser-loadable URLs load directly; anything else (a relative path or
         // any custom scheme) is resolved by basename via the vault file index.
         const webLoadable = /^(https?|data|blob|file):/i.test(url);
-        const src = webLoadable ? url : attachmentUrl(url.split('/').pop() || url);
-        pushReplace(s, e, Decoration.replace({ widget: new ImageWidget(src, alt, w, h) }));
+        let vaultRef: string | null = null;
+        if (!webLoadable) {
+          vaultRef = url.replace(/^<|>$/g, '');
+          try {
+            vaultRef = decodeURIComponent(vaultRef);
+          } catch {
+            /* keep raw */
+          }
+        }
+        const src = vaultRef === null ? url : attachmentUrl(vaultRef);
+        pushReplace(s, e, Decoration.replace({ widget: new ImageWidget(src, alt, w, h, vaultRef) }));
       }
 
       // Markdown links [text](url) — not preceded by ! (those are images)
