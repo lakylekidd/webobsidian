@@ -917,6 +917,12 @@ body.wo-col-resizing .sidebar, body.wo-col-resizing .right-sidebar { transition:
 .modal { background: var(--bg-primary); border: 1px solid var(--bg-modifier-border); border-radius: 10px;
   width: 640px; max-width: 92vw; max-height: 70vh; overflow: hidden; box-shadow: var(--shadow);
   display: flex; flex-direction: column; }
+/* In-app confirm (replaces window.confirm, which embedded browsers suppress). */
+.modal.confirm-dialog { width: 380px; padding: 18px 20px 16px; overflow: visible; }
+.confirm-dialog-msg { margin: 0 0 16px; color: var(--text-normal); font-size: 14px; line-height: 1.45; word-break: break-word; }
+.confirm-dialog-msg + .confirm-dialog-detail { margin-top: -8px; }
+.confirm-dialog-detail { margin: 0 0 16px; color: var(--text-muted); font-size: 13px; line-height: 1.45; }
+.confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .palette-input { width: 100%; padding: 14px 16px; font-size: 16px; background: transparent; border: 0;
   border-bottom: 1px solid var(--bg-modifier-border); color: var(--text-normal); outline: none; }
 .palette-list { overflow-y: auto; padding: 6px; }
@@ -1822,3 +1828,23 @@ audio.media-embed { display: block; width: min(100%, 480px); max-width: 100%; ma
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 @media (max-width: 480px) { .link-preview-thumb { flex-basis: 96px; } }
+
+/* Quick delete. Hidden with opacity (not display:none) so it stays in the tab order:
+   it fades in on row hover, row focus-within, and its own keyboard focus. Touch /
+   coarse-pointer devices have no hover, so it is always visible there. */
+.tree-row .tree-del {
+  display: grid; place-items: center; opacity: 0; margin-left: auto; padding: 2px; border: 0;
+  background: transparent; color: var(--text-faint); cursor: pointer; flex-shrink: 0;
+  border-radius: 4px; line-height: 0;
+}
+.tree-row:hover .tree-del, .tree-row:focus-within .tree-del, .tree-row .tree-del:focus-visible { opacity: 1; }
+.tree-row .tree-del:hover { color: var(--text-error, #e5484d); background: var(--bg-modifier-hover); }
+.tree-row .tree-del:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 1px; }
+.tree-row .bm-star + .tree-del { margin-left: 4px; }
+/* Touch: no hover, and an icon on every row is clutter plus accidental-tap bait. Tapping a
+   row selects it, so only the selected row shows the button (larger tap target); on the
+   others it is invisible AND inert so stray taps near the row's edge can't trigger it. */
+@media (hover: none), (pointer: coarse) {
+  .tree-row .tree-del { opacity: 0; pointer-events: none; padding: 8px; margin-block: -6px; }
+  .tree-row.selected .tree-del { opacity: 1; pointer-events: auto; }
+}
