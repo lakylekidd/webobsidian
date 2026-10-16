@@ -4,7 +4,7 @@
 > Quy ước: `[ ]` chưa làm · `[~]` đang làm · `[x]` xong.
 > Cập nhật file này **mỗi khi** một mục thay đổi trạng thái.
 
-Cập nhật lần cuối: 2026-10-15 (hanging indent list/task/ordered; multi-cursor #10; link preview card #7; trước đó 2026-10-13 đã kiểm chứng cấu hình release v0.1.2 cho fork lakylekidd/webobsidian)
+Cập nhật lần cuối: 2026-10-16 (double-click inline rename trong file tree #19; trước đó 2026-10-15: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
 
 ---
 
@@ -437,8 +437,16 @@ Cập nhật lần cuối: 2026-10-15 (hanging indent list/task/ordered; multi-c
       (Reading, Live Preview, Public Share); whitelist trong `web/src/lib/embeds.ts` (+ bản server), iframe
       dựng lại từ ID đã validate sau sanitize; CSP `frame-src` chỉ thêm 3 domain.
 
+## Phase 28 — Inline rename trong file tree (FR-1, issue #19)
+- [x] M28.1 Double-click tên file/folder để vào inline rename qua `RenameInput` hiện có; giữ Rename context menu,
+      Enter xác nhận, Escape huỷ, click đơn vẫn xử lý bình thường. Web typecheck + production build sạch.
+      `Editor.tsx` không `v.focus()` khi đang rename (double-click note chưa mở: editor mount cướp focus làm input bị blur/đóng).
+
 ### Nhật ký tiến độ
 
+- 2026-10-16 (Double-click rename #19): dùng lại inline rename hiện có cho tên file tree, bỏ xử lý click lần hai
+  để tránh mở/toggle thêm; giữ nguyên luồng context menu. Web typecheck + production build sạch.
+  Sửa: double-click note chưa mở → editor mount `v.focus()` làm blur input rename; bỏ focus khi `renamingPath` set. Verify thủ công: note/canvas/folder rename + Escape.
 - 2026-10-14 (External media embeds #6): thêm `resolveExternalEmbed` + rehype plugin chạy sau sanitize,
   widget Live Preview, CSS responsive. Typecheck OK; kiểm chứng render server (HTML iframe thô bị loại).
 - 2026-10-13 (release v0.1.2 — cấu hình đã kiểm chứng): root/desktop + lockfile đồng bộ `0.1.2`;

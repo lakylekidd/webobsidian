@@ -305,7 +305,9 @@ export default function Editor() {
     const v = new EditorView({ state, parent: host.current });
     view.current = v;
     setActiveEditor(v);
-    v.focus();
+    // Don't steal focus from the file tree's inline rename box (double-click on a
+    // note that isn't open yet opens it, then enters rename).
+    if (!useStore.getState().renamingPath) v.focus();
     return () => {
       setActiveEditor(null);
       v.destroy();

@@ -1,7 +1,8 @@
 # PRD — WebObsidian
 
 > Product Requirements Document
-> Phiên bản: 1.5 · Cập nhật: 2026-06-22 · Trạng thái: Draft
+> Phiên bản: 1.7 · Cập nhật: 2026-10-16 · Trạng thái: Draft
+> Changelog 1.7 (FR-1 — Inline rename từ file tree, issue #19): double-click tên file, folder hoặc canvas để vào inline rename; Enter xác nhận, Escape huỷ. Giữ Rename trong context menu và dùng cùng validation hiện có.
 > Changelog 1.6 (FR-2 — Link preview card, issue #7): URL đứng riêng một dòng render thành thẻ preview (thumbnail, title, mô tả 2 dòng, domain) ở Reading view, Live Preview và trang Public share; Markdown gốc giữ nguyên, lỗi fetch → link thường. Server fetch metadata an toàn (chặn IP nội bộ, giới hạn redirect/size/timeout, chỉ lấy OG text) qua provider chain mở rộng được.
 >
 > Changelog 1.5 (FR-13 — Desktop app Electron đa nền tảng, theo yêu cầu người dùng): bổ sung **FR-13** —
@@ -173,6 +174,8 @@ webobsidian/
 - Chọn/đổi thư mục Vault qua Settings (đường dẫn server-side, có folder browser an toàn trong allowed roots).
 - CRUD file & folder: tạo, đọc, ghi, đổi tên, di chuyển, xoá. Chế độ xoá cấu hình qua
   `vault.deleteMode`: `trash` (→ `.trash`, khôi phục được — mặc định) hoặc `permanent` (xoá hẳn).
+- **Inline rename trong file tree**: double-click tên file, folder hoặc canvas để sửa trực tiếp; Enter xác nhận,
+  Escape huỷ. Giữ thao tác Rename trong context menu và áp dụng cùng validation hiện có.
 - **Trash**: giao diện xem các file đã xoá, **Restore** về vị trí gốc, **xoá vĩnh viễn** từng file, **Empty
   trash**. Trash ẩn khỏi file tree (dotfile) và khỏi watcher; mở qua nút 🗑 header Files hoặc command palette.
 - **Copy/Cut/Paste** trên context menu file tree (file & folder): clipboard session-local; Cut = move (`rename`),
