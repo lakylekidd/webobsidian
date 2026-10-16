@@ -114,6 +114,7 @@ interface AppState {
   manualOrder: Record<string, string[]>;
   setManualOrderForParent: (parent: string, order: string[]) => void;
   autoReveal: boolean;
+  setAutoReveal: (v: boolean) => void;
   toggleAutoReveal: () => void;
   /** Show auto-created `attachments/` folders in the file tree (persisted; hidden by default). */
   showAttachmentFolders: boolean;
@@ -451,6 +452,7 @@ export const useStore = create<AppState>()(
           },
         })),
       autoReveal: false,
+      setAutoReveal: (autoReveal) => set({ autoReveal }),
       toggleAutoReveal: () => set((s) => ({ autoReveal: !s.autoReveal })),
       showAttachmentFolders: false,
       setShowAttachmentFolders: (showAttachmentFolders) => set({ showAttachmentFolders }),

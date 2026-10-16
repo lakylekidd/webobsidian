@@ -107,7 +107,7 @@ export default function Sidebar() {
             </button>
             <button
               className={`nav-action ${autoReveal ? 'active' : ''}`}
-              title="Auto reveal current file"
+              title="Reveal active file in explorer"
               onClick={() => toggleAutoReveal()}
             >
               <Icon name="crosshair" size={16} />

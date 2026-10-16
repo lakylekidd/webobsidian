@@ -68,6 +68,8 @@ function Row({ name, desc, children }: { name: string; desc?: string; children: 
 }
 
 function VaultSettings({ s, reload }: { s: any; reload: () => void }) {
+  const autoReveal = useStore((st) => st.autoReveal);
+  const setAutoReveal = useStore((st) => st.setAutoReveal);
   const showAttachmentFolders = useStore((st) => st.showAttachmentFolders);
   const setShowAttachmentFolders = useStore((st) => st.setShowAttachmentFolders);
   const [path, setPath] = useState(s.vault.path);
@@ -146,6 +148,16 @@ function VaultSettings({ s, reload }: { s: any; reload: () => void }) {
           type="checkbox"
           checked={showAttachmentFolders}
           onChange={(e) => setShowAttachmentFolders(e.target.checked)}
+        />
+      </Row>
+      <Row
+        name="Reveal active file in explorer"
+        desc="When enabled, opening or switching documents auto-expands parent folders, scrolls to the active file, and highlights it in the file explorer."
+      >
+        <input
+          type="checkbox"
+          checked={autoReveal}
+          onChange={(e) => setAutoReveal(e.target.checked)}
         />
       </Row>
       <Row

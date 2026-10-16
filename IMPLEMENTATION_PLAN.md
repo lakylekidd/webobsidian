@@ -4,7 +4,7 @@
 > Quy ước: `[ ]` chưa làm · `[~]` đang làm · `[x]` xong.
 > Cập nhật file này **mỗi khi** một mục thay đổi trạng thái.
 
-Cập nhật lần cuối: 2026-10-16 (floating document outline #32; manual file/folder sorting kéo-thả theo thư mục #34; ẩn thư mục attachments trong tree; local attachment folders + nút xoá ảnh #30; trash retention; fix hanging indent list/task #20; nút xoá nhanh trong file tree + confirm trong app; double-click inline rename #19; trước đó: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
+Cập nhật lần cuối: 2026-10-16 (issue #36 reveal active file in explorer; floating document outline #32; manual file/folder sorting kéo-thả theo thư mục #34; ẩn thư mục attachments trong tree; local attachment folders + nút xoá ảnh #30; trash retention; fix hanging indent list/task #20; nút xoá nhanh trong file tree + confirm trong app; double-click inline rename #19; trước đó: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
 
 ---
 
@@ -461,8 +461,13 @@ Cập nhật lần cuối: 2026-10-16 (floating document outline #32; manual fil
 - [x] M32.3 Drag-and-drop ở Manual mode: thả lên sibling row để reorder file/folder trong cùng thư mục; không rename file/folder.
 - [x] M32.4 Chuyển sang mode sort khác không xoá metadata manual; chuyển lại Manual khôi phục thứ tự trước đó.
 
+## Phase 33 — Reveal active file in explorer (FR-1, issue #36)
+- [x] M33.1 Thêm setting `Reveal active file in explorer` trong Settings → Vault & Files, dùng chung state `autoReveal` đã có (persist qua uistate), đồng bộ wording với nút toggle ở header Files.
+
 ### Nhật ký tiến độ
 
+- 2026-10-16 (Issue #36 — bắt đầu): xác nhận logic auto reveal hiện có (`autoReveal` + expand ancestor + scroll + active highlight) đã đáp ứng phần hành vi; đang bổ sung setting hiển thị rõ ràng trong Settings → Vault & Files và cập nhật PRD/plan.
+- 2026-10-16 (Issue #36 — hoàn tất): thêm checkbox `Reveal active file in explorer` ở Settings → Vault & Files (bind trực tiếp state persisted `autoReveal`), bổ sung setter `setAutoReveal` trong store, đổi tooltip nút crosshair ở header Files theo cùng wording, và cập nhật PRD 1.12 + plan phase 32. Verify: `npm --workspace web run typecheck` + `npm --workspace web run build` pass.
 - 2026-10-16 (Issue #34 — Manual sorting file explorer): thêm mode sort `Manual` + metadata `manualOrder` persist trong `/api/uistate` theo từng parent folder; khi reload/reopen/switch folder vẫn giữ thứ tự. Drag-thả trên sibling row trong cùng thư mục sẽ reorder (file+folder cùng danh sách), không đổi tên đường dẫn. Khi tree đổi (create/move/delete), reconcile giữ thứ tự cũ và append item mới vào cuối thư mục đích. Verify: web/server typecheck + build sạch.
 - 2026-10-16 (Local attachments #30): ảnh dán lưu cạnh note + link tương đối; endpoint resolve/references/permanent delete;
   icon xoá khi hover ảnh. Server + web typecheck sạch; chưa kiểm thử thủ công trên trình duyệt.
