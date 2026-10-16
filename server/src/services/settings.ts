@@ -35,6 +35,9 @@ const SettingsSchema = z.object({
       // Xoá file: 'trash' = chuyển vào thư mục .trash (khôi phục được);
       // 'permanent' = xoá vĩnh viễn ngay.
       deleteMode: z.enum(['trash', 'permanent']).default('trash'),
+      // Số ngày giữ item trong .trash (tính từ lúc item được chuyển vào trash) trước khi
+      // tự xoá vĩnh viễn. 0 = giữ mãi, không tự dọn.
+      trashRetentionDays: z.number().int().min(0).max(3650).default(30),
       attachmentDir: z.string().default('attachments'),
     })
     .default({}),

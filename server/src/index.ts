@@ -33,6 +33,7 @@ import { buildFileIndex, indexFile, unindexFile } from './services/fileindex.js'
 import { setBroadcaster, broadcast } from './services/realtime.js';
 import { getVaultRoot, ensureVault, invalidateStat } from './services/vault.js';
 import { startAutoSync } from './services/autosync.js';
+import { startTrashRetention } from './services/trashretention.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -149,6 +150,7 @@ async function main() {
   setupWebsocket(server);
   await setupWatcher();
   startAutoSync();
+  startTrashRetention();
 
   server.listen(config.port, config.host, () => {
     console.log(`\n  WebObsidian server → http://${config.host}:${config.port}`);

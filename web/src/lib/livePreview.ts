@@ -2234,12 +2234,16 @@ function buildDecorations(view: EditorView): DecorationSet {
       };
       // Hanging indent: wrapped lines align with the text after the marker. Indent
       // units and the marker widget have fixed widths (see .HyperMD-hang in CSS).
-      // `markerW` overrides the marker width (ordered lists: depends on digit count).
+      // Build the prefix by addition because CSS calc multiplication is not supported
+      // by all browsers. `markerW` varies with digit count for ordered lists.
       const hang = (ws: string, markerW?: string): Record<string, string> => {
         if (bodyStart) return {};
         let units = 0;
         for (let i = 0; i < ws.length; i += ws[i] === '\t' ? 1 : 4) units++;
-        return { style: `--hang-units:${units}${markerW ? `;--hang-marker-w:${markerW}` : ''}` };
+        const prefix = [...Array.from({ length: units }, () => 'var(--hang-indent-w)'), 'var(--hang-marker-w)'].join(' + ');
+        // `--hang-marker-w` must be set on the line itself: the ordered-list marker box
+        // (.cm-ol-marker) reads it for its width, so it has to match what the prefix uses.
+        return { style: `${markerW ? `--hang-marker-w:${markerW};` : ''}--hang-prefix:calc(${prefix})` };
       };
       const task = body.match(/^(\s*)([-*+])\s+\[(.)\]\s/);
       if (task) {

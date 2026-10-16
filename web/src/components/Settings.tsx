@@ -70,7 +70,20 @@ function Row({ name, desc, children }: { name: string; desc?: string; children: 
 function VaultSettings({ s, reload }: { s: any; reload: () => void }) {
   const [path, setPath] = useState(s.vault.path);
   const [deleteMode, setDeleteMode] = useState(s.vault.deleteMode ?? 'trash');
+  const [retention, setRetention] = useState(String(s.vault.trashRetentionDays ?? 30));
   const [browser, setBrowser] = useState<any>(null);
+  // Whole days, 0 (keep forever) … 3650. Invalid input snaps back to the saved value.
+  const saveRetention = async () => {
+    const n = Number(retention);
+    const saved = s.vault.trashRetentionDays ?? 30;
+    if (!Number.isInteger(n) || n < 0 || n > 3650) {
+      setRetention(String(saved));
+      return;
+    }
+    if (n === saved) return;
+    await api.putSettings({ vault: { trashRetentionDays: n } });
+    await reload();
+  };
   const save = async () => {
     await api.putSettings({ vault: { path } });
     await reload();
@@ -122,6 +135,25 @@ function VaultSettings({ s, reload }: { s: any; reload: () => void }) {
           <option value="trash">Move to .trash (recoverable)</option>
           <option value="permanent">Permanently delete</option>
         </select>
+      </Row>
+      <Row
+        name="Trash retention (days)"
+        desc="Items in .trash are permanently deleted this many days after they were moved there. 0 keeps them forever."
+      >
+        <input
+          className="text-input"
+          type="number"
+          min={0}
+          max={3650}
+          step={1}
+          style={{ width: 90 }}
+          value={retention}
+          onChange={(e) => setRetention(e.target.value)}
+          onBlur={saveRetention}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+          }}
+        />
       </Row>
     </div>
   );
