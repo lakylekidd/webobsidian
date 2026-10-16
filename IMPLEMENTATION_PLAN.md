@@ -4,7 +4,7 @@
 > Quy ước: `[ ]` chưa làm · `[~]` đang làm · `[x]` xong.
 > Cập nhật file này **mỗi khi** một mục thay đổi trạng thái.
 
-Cập nhật lần cuối: 2026-10-16 (nút xoá nhanh trong file tree + confirm trong app; double-click inline rename trong file tree #19; trước đó 2026-10-15: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
+Cập nhật lần cuối: 2026-10-16 (nút xoá nhanh trong file tree + confirm trong app; fix hanging indent list/task #20; double-click inline rename #19; trước đó: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
 
 ---
 
@@ -442,8 +442,12 @@ Cập nhật lần cuối: 2026-10-16 (nút xoá nhanh trong file tree + confirm
       Enter xác nhận, Escape huỷ, click đơn vẫn xử lý bình thường. Web typecheck + production build sạch.
       `Editor.tsx` không `v.focus()` khi đang rename (double-click note chưa mở: editor mount cướp focus làm input bị blur/đóng).
 
+## Phase 29 — List hanging indent compatibility (FR-2, issue #20)
+- [x] M29.1 Tạo prefix indent bằng phép cộng và phép trừ CSS `calc()` thay phép nhân, để hanging indent hoạt động ổn định trên Edge với bullet, numbered, task và nested lists. Typecheck/build sạch; Chromium xác nhận wrapped line thẳng hàng cho bullet, numbered, task và nested list.
+
 ### Nhật ký tiến độ
 
+- 2026-10-16 (Issue #20): hanging indent không ổn định do phép nhân trong CSS `calc()` khi tạo prefix và negative indent. Thay bằng chuỗi phép cộng theo số cấp lồng, cùng phép trừ tương thích hơn với Edge. Verify: typecheck/build sạch; Chromium xác nhận wrapped line thẳng hàng cho bullet, numbered, task và nested list.
 - 2026-10-16 (Double-click rename #19): dùng lại inline rename hiện có cho tên file tree, bỏ xử lý click lần hai
   để tránh mở/toggle thêm; giữ nguyên luồng context menu. Web typecheck + production build sạch.
   Sửa: double-click note chưa mở → editor mount `v.focus()` làm blur input rename; bỏ focus khi `renamingPath` set. Verify thủ công: note/canvas/folder rename + Escape.
@@ -1297,3 +1301,4 @@ Cập nhật lần cuối: 2026-10-16 (nút xoá nhanh trong file tree + confirm
 - 2026-10-15: Hanging indent cho list/task/ordered list (Live Preview) — `livePreview.ts` (`hang()` đặt `--hang-units`/`--hang-marker-w`, class `HyperMD-hang`; ordered list: marker `1.` bọc `cm-ol-marker` rộng cố định theo số chữ số, khoảng trắng sau marker ẩn khi caret không chạm), `obsidian.css` (padding-left + text-indent âm). Không áp dụng trong quote/callout. Verify: typecheck sạch; đo pixel dòng wrap == dòng đầu cho bullet/task/lồng nhau/ordered 1–3 chữ số; trạng thái raw khi caret chạm marker ổn định.
 - 2026-10-15: Highlight YAML front matter trong Source mode (issue #9) — `Editor.tsx` dùng `yamlFrontmatter` (@codemirror/lang-yaml) bọc markdown; `highlight.ts` thêm style `meta` cho `---`. Verify: typecheck.
 - 2026-10-16: Nút xoá nhanh (hover) trên hàng file tree — `FileTree.tsx` (`.tree-del`, gọi `doDelete`). Sửa lỗi nút "không phản hồi": `window.confirm()` bị chặn/tự huỷ trong trình duyệt nhúng (preview pane) nên không có prompt → thêm `lib/confirm.ts` (`confirmDialog` dạng promise) + `ConfirmDialog.tsx` (Esc/Cancel/backdrop = huỷ, focus mặc định ở Cancel); dùng cho `doDelete`/`doDeleteMany` (context menu cũng hưởng). Verify: typecheck sạch; cancel/Esc giữ file, Delete chuyển vào .trash. Xoá folder: dòng cảnh báo phụ (`detail`) "folder và nội dung (N mục) sẽ bị xoá" / "folder rỗng"; xoá nhiều mục có folder → "Folders and everything inside them will be removed.". Chưa đổi các `confirm()` khác (Settings, TrashView, VersionHistory, ShareDialog, Workspace) Fallback touch/keyboard: nút dùng `opacity` thay `display:none` (tab được, hiện khi hover/focus-within/focus-visible), `@media (hover:none),(pointer:coarse)` chỉ hiện trên hàng đang chọn (`.selected`, tap hàng để chọn; hàng khác opacity 0 + `pointer-events:none` để không chạm nhầm) + vùng chạm lớn hơn; `ConfirmDialog` bẫy Tab giữa Cancel/Delete.
+- 2026-10-16: Sửa hanging indent ordered list sau khi đổi `calc()` (nhánh fix-indentations-in-lists) — `hang()` phải đặt cả `--hang-marker-w` lên dòng (box `.cm-ol-marker` dùng biến này làm width), nếu không box lấy giá trị mặc định và dòng wrap lệch 4–13px. Verify: đo pixel 15 dòng lồng nhau (bullet/task/ordered 1–2 chữ số/tab/hỗn hợp) + note cũ, tất cả thẳng hàng; typecheck sạch.
