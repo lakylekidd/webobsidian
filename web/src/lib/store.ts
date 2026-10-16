@@ -10,8 +10,9 @@ export type ViewMode = 'live' | 'source' | 'reading';
 export type TreeSort =
   | 'name-asc' | 'name-desc'
   | 'mtime-desc' | 'mtime-asc'
-  | 'ctime-desc' | 'ctime-asc';
-const TREE_SORTS: TreeSort[] = ['name-asc', 'name-desc', 'mtime-desc', 'mtime-asc', 'ctime-desc', 'ctime-asc'];
+  | 'ctime-desc' | 'ctime-asc'
+  | 'manual';
+const TREE_SORTS: TreeSort[] = ['name-asc', 'name-desc', 'mtime-desc', 'mtime-asc', 'ctime-desc', 'ctime-asc', 'manual'];
 
 /** Sentinel tab path for the Graph view (it lives in a tab, like Obsidian). */
 export const GRAPH_PATH = 'graph://view';
@@ -109,6 +110,9 @@ interface AppState {
   // file tree sort order + auto-reveal active file (both persisted)
   treeSort: TreeSort;
   setTreeSort: (s: TreeSort) => void;
+  /** Per-folder manual order (key: folder path, '' = vault root; value: ordered child paths). */
+  manualOrder: Record<string, string[]>;
+  setManualOrderForParent: (parent: string, order: string[]) => void;
   autoReveal: boolean;
   toggleAutoReveal: () => void;
   /** Show auto-created `attachments/` folders in the file tree (persisted; hidden by default). */
@@ -226,7 +230,7 @@ const TEXT_RE = /\.(md|markdown|txt|json|csv|canvas|css|js|ya?ml)$/i;
 const PERSIST_KEYS = [
   'tabs', 'activePath', 'viewMode', 'expanded', 'splitPath', 'splitDirection',
   'recent', 'bookmarks', 'leftPanel', 'rightPanel', 'leftOpen', 'rightOpen', 'graphSettings',
-  'treeSort', 'autoReveal', 'showAttachmentFolders',
+  'treeSort', 'manualOrder', 'autoReveal', 'showAttachmentFolders',
 ] as const;
 
 function pickPersisted(s: any): Record<string, unknown> {
@@ -254,6 +258,54 @@ function migrateGraphSettings(gs: unknown): GraphSettings {
   return merged;
 }
 
+/** Sanitize persisted manual order data (folderPath -> ordered child paths). */
+function parseManualOrder(input: unknown): Record<string, string[]> {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
+  const out: Record<string, string[]> = {};
+  for (const [k, v] of Object.entries(input)) {
+    if (!Array.isArray(v)) continue;
+    const seen = new Set<string>();
+    const arr: string[] = [];
+    for (const p of v) {
+      if (typeof p !== 'string' || !p || seen.has(p)) continue;
+      seen.add(p);
+      arr.push(p);
+    }
+    out[k] = arr;
+  }
+  return out;
+}
+
+/**
+ * Keep manual-order metadata in sync with the live tree:
+ * - remove deleted paths,
+ * - preserve known order,
+ * - append brand-new children to the end (per-folder).
+ */
+function reconcileManualOrder(tree: TreeNode | null, current: Record<string, string[]>): Record<string, string[]> {
+  if (!tree) return {};
+  const out: Record<string, string[]> = {};
+  const walk = (node: TreeNode) => {
+    const key = node.path || '';
+    const children = node.children ?? [];
+    const childPaths = children.map((c) => c.path);
+    const known = new Set(childPaths);
+    const existing = current[key] ?? [];
+    const kept = existing.filter((p) => known.has(p));
+    const seen = new Set(kept);
+    for (const p of childPaths) {
+      if (!seen.has(p)) {
+        kept.push(p);
+        seen.add(p);
+      }
+    }
+    out[key] = kept;
+    for (const c of children) if (c.type === 'folder') walk(c);
+  };
+  walk(tree);
+  return out;
+}
+
 function applyPersisted(s: any, set: (p: any) => void): void {
   set({
     tabs: Array.isArray(s.tabs) ? s.tabs : [],
@@ -261,6 +313,7 @@ function applyPersisted(s: any, set: (p: any) => void): void {
     viewMode: ['live', 'source', 'reading'].includes(s.viewMode) ? s.viewMode : 'live',
     expanded: Array.isArray(s.expanded) ? s.expanded : [],
     treeSort: TREE_SORTS.includes(s.treeSort) ? s.treeSort : 'name-asc',
+    manualOrder: parseManualOrder(s.manualOrder),
     autoReveal: s.autoReveal === true,
     showAttachmentFolders: s.showAttachmentFolders === true,
     splitPath: typeof s.splitPath === 'string' ? s.splitPath : null,
@@ -315,7 +368,7 @@ export const useStore = create<AppState>()(
       tree: null,
       loadTree: async () => {
         const tree = await api.tree();
-        set({ tree });
+        set((s) => ({ tree, manualOrder: reconcileManualOrder(tree, s.manualOrder) }));
       },
 
       tabs: [],
@@ -361,6 +414,14 @@ export const useStore = create<AppState>()(
       setExpanded: (paths) => set({ expanded: paths }),
       treeSort: 'name-asc',
       setTreeSort: (treeSort) => set({ treeSort }),
+      manualOrder: {},
+      setManualOrderForParent: (parent, order) =>
+        set((s) => ({
+          manualOrder: {
+            ...s.manualOrder,
+            [parent]: Array.from(new Set(order.filter(Boolean))),
+          },
+        })),
       autoReveal: false,
       toggleAutoReveal: () => set((s) => ({ autoReveal: !s.autoReveal })),
       showAttachmentFolders: false,

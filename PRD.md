@@ -1,7 +1,8 @@
 # PRD — WebObsidian
 
 > Product Requirements Document
-> Phiên bản: 1.10 · Cập nhật: 2026-10-16 · Trạng thái: Draft
+> Phiên bản: 1.11 · Cập nhật: 2026-10-16 · Trạng thái: Draft
+> Changelog 1.11 (FR-1 — Manual sorting trong file explorer, issue #34): thêm lựa chọn sort **Manual** trong Files sidebar. Khi bật Manual, người dùng kéo-thả trực tiếp trong tree để đổi thứ tự file/folder theo từng thư mục; thứ tự tuỳ chỉnh lưu trong workspace state server-side (`/api/uistate`) theo key từng parent folder, không đổi tên file/folder và không sửa nội dung markdown. Chuyển sang mode sort khác không xoá dữ liệu manual; chuyển lại Manual thì khôi phục thứ tự cũ. Item mới hoặc item được move vào thư mục sẽ được thêm vào cuối danh sách manual của thư mục đích.
 > Changelog 1.10 (FR-1 — Ẩn thư mục attachments trong file tree): thêm tuỳ chọn **Settings → Vault & Files → Show attachment folders** (mặc định **tắt**, lưu cùng workspace state nên đồng bộ giữa tab/thiết bị). Khi tắt, thư mục tên `attachments` (không phân biệt hoa thường) bị ẩn khỏi file tree, folder view và hộp "Move to…" — **trừ khi** bên trong (kể cả thư mục con) có note `.md`/`.markdown` hoặc canvas (safeguard để không ẩn thư mục thật của người dùng). Chỉ ẩn khi hiển thị: file vẫn nằm trên đĩa, embed/share không đổi, cảnh báo xoá folder vẫn đếm cả nội dung ẩn; "Reveal file in navigation" cho file nằm trong thư mục ẩn sẽ báo cách bật tuỳ chọn. Sau khi xoá/đưa vào trash file trong `attachments/`, thư mục `attachments/` rỗng được tự dọn (không đụng thư mục khác).
 > Changelog 1.9 (FR-1/FR-2 — Local attachment folders + nút xoá ảnh, issue #30): ảnh dán/drop được lưu vào `attachments/` **cạnh note** (tự tạo; tên không bao giờ ghi đè: `image.png`, `image-1.png`…) và chèn đường dẫn tương đối `![](attachments/x.png)`. `GET /api/files/content?path=…&from=<note>` resolve đường dẫn tương đối theo thư mục note trước, rồi mới fallback basename toàn vault. Hover ảnh (Live Preview + Reading) hiện icon thùng rác góc trên-phải: xoá tham chiếu khỏi note; kiểm tra tham chiếu ở note khác (`GET /api/files/references`) — không còn ai dùng thì xoá vĩnh viễn file (`DELETE /api/files?permanent=1`), còn dùng thì cảnh báo và chỉ gỡ khỏi note hiện tại (giữ file).
 > Changelog 1.8 (FR-1 — Trash retention): thêm setting `vault.trashRetentionDays` (mặc định **30**, `0` = giữ mãi) trong Settings → Vault & Files. Item trong `.trash` bị **xoá vĩnh viễn** sau số ngày này, tính từ **thời điểm item được chuyển vào trash** (không phải mtime của file — `rename` giữ nguyên mtime gốc). Thời điểm ghi trong `<trash>/.trash-index.json`; item có sẵn trong trash trước tính năng được bắt đầu tính từ lần quét đầu tiên (không bị xoá ngay). Dọn lúc khởi động, mỗi giờ và ngay khi đổi setting; chỉ tác động trong `.trash`.
@@ -27,7 +28,7 @@
 > `web/lib/media.ts`. Không thêm API mới.
 > Changelog 1.3 (FR-1 — File explorer header toolbar parity Obsidian, theo yêu cầu người dùng): header sidebar
 > **Files** bổ sung đủ nút như Obsidian: **New note**, **New canvas**, **New folder**, **Change sort order**
-> (dropdown 6 kiểu: File name A→Z/Z→A, Modified time new↔old, Created time new↔old), **Auto reveal current
+> (dropdown 7 kiểu: File name A→Z/Z→A, Modified time new↔old, Created time new↔old, Manual), **Auto reveal current
 > file** (toggle: tự mở folder cha + cuộn tới file đang xem), **Collapse all / Expand all**. Sort theo thời gian
 > nhanh nhờ **stat cache trong RAM** ở server (`listTree` fill 1 lần, watcher invalidate file đổi → 0 syscall
 > ở steady-state); `TreeNode` thêm `ctime`. Không thêm API mới (tree cũ nay kèm `mtime`/`ctime`). Canvas (FR-12):
@@ -179,6 +180,11 @@ webobsidian/
   `vault.deleteMode`: `trash` (→ `.trash`, khôi phục được — mặc định) hoặc `permanent` (xoá hẳn).
 - **Inline rename trong file tree**: double-click tên file, folder hoặc canvas để sửa trực tiếp; Enter xác nhận,
   Escape huỷ. Giữ thao tác Rename trong context menu và áp dụng cùng validation hiện có.
+- **Sort trong file tree**: 7 chế độ (`File name A→Z`, `File name Z→A`, `Modified new→old`, `Modified old→new`,
+  `Created new→old`, `Created old→new`, `Manual`). Ở mode **Manual**, kéo-thả trên tree đổi thứ tự file/folder
+  theo từng thư mục; metadata thứ tự lưu server-side trong uistate, không đổi tên file và không sửa nội dung note.
+  Chuyển mode sort khác không xoá thứ tự manual; item mới hoặc move vào thư mục được thêm vào cuối thứ tự manual
+  của thư mục đích.
 - **Trash**: giao diện xem các file đã xoá, **Restore** về vị trí gốc, **xoá vĩnh viễn** từng file, **Empty
   trash**. Trash ẩn khỏi file tree (dotfile) và khỏi watcher; mở qua nút 🗑 header Files hoặc command palette.
 - **Trash retention**: item trong `.trash` tự xoá vĩnh viễn sau `vault.trashRetentionDays` ngày (mặc định 30; `0` = không tự dọn),

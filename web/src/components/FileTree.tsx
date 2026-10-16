@@ -176,6 +176,10 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
   const notify = useStore((s) => s.notify);
   const setShareDialog = useStore((s) => s.setShareDialog);
   const shares = useStore((s) => s.shares);
+  const treeSort = useStore((s) => s.treeSort);
+  const manualOrder = useStore((s) => s.manualOrder);
+  const setManualOrderForParent = useStore((s) => s.setManualOrderForParent);
+  const tree = useStore((s) => s.tree);
   const isSelected = useStore((s) => s.selected.includes(node.path));
   const setSelected = useStore((s) => s.setSelected);
   const setSelectAnchor = useStore((s) => s.setSelectAnchor);
@@ -385,8 +389,31 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
     e.preventDefault();
     e.stopPropagation();
     setDropping(false);
+    const dragged = pruneDescendants(readDragPaths(e));
+    const targetParent = parentDir(node.path);
+    // Manual mode: dropping onto a sibling row reorders inside that parent
+    // (folders + files together), instead of moving into the folder row.
+    if (
+      treeSort === 'manual' &&
+      dragged.length > 0 &&
+      !dragged.includes(node.path) &&
+      dragged.every((p) => parentDir(p) === targetParent)
+    ) {
+      const parentNode = targetParent ? findNode(tree, targetParent) : tree;
+      const fallback = (parentNode?.children ?? []).map((c) => c.path);
+      const current = manualOrder[targetParent] ?? fallback;
+      const movingSet = new Set(dragged);
+      const insert = current.filter((p) => movingSet.has(p));
+      const rest = current.filter((p) => !movingSet.has(p));
+      const at = rest.indexOf(node.path);
+      const next = at < 0
+        ? [...rest, ...insert]
+        : [...rest.slice(0, at), ...insert, ...rest.slice(at)];
+      setManualOrderForParent(targetParent, next);
+      return;
+    }
     const targetDir = isFolder ? node.path : parentDir(node.path);
-    await moveItemsTo(readDragPaths(e), targetDir);
+    await moveItemsTo(dragged, targetDir);
   };
 
   if (isFolder) {
@@ -535,9 +562,25 @@ export function collectFolderPaths(root: TreeNode | null): string[] {
  * applies to files. Only rendered (expanded) folders' children are shown, so
  * this naturally sorts just what's visible in the panel.
  */
-function sortTree(node: TreeNode, order: TreeSort, showAttachments: boolean): TreeNode {
+function sortTree(
+  node: TreeNode,
+  order: TreeSort,
+  showAttachments: boolean,
+  manualOrder: Record<string, string[]>,
+): TreeNode {
   if (!node.children) return node;
+  const folderKey = node.path || '';
+  const manual = manualOrder[folderKey] ?? [];
+  const pos = new Map(manual.map((p, i) => [p, i]));
   const cmp = (a: TreeNode, b: TreeNode): number => {
+    if (order === 'manual') {
+      const ai = pos.get(a.path);
+      const bi = pos.get(b.path);
+      if (ai != null && bi != null) return ai - bi;
+      if (ai != null) return -1;
+      if (bi != null) return 1;
+      return a.name.localeCompare(b.name);
+    }
     if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
     if (a.type === 'folder') return a.name.localeCompare(b.name);
     switch (order) {
@@ -552,7 +595,7 @@ function sortTree(node: TreeNode, order: TreeSort, showAttachments: boolean): Tr
   // Hidden attachment folders are dropped from this render copy only; the raw store tree
   // (used for name collisions, delete counts, etc.) still contains them.
   const children = displayChildren(node.children, showAttachments)
-    .map((c) => (c.type === 'folder' ? sortTree(c, order, showAttachments) : c))
+    .map((c) => (c.type === 'folder' ? sortTree(c, order, showAttachments, manualOrder) : c))
     .sort(cmp);
   return { ...node, children };
 }
@@ -560,8 +603,9 @@ function sortTree(node: TreeNode, order: TreeSort, showAttachments: boolean): Tr
 export default function FileTree() {
   const rawTree = useStore((s) => s.tree);
   const treeSort = useStore((s) => s.treeSort);
+  const manualOrder = useStore((s) => s.manualOrder);
   const showAttachmentFolders = useStore((s) => s.showAttachmentFolders);
-  const tree = rawTree ? sortTree(rawTree, treeSort, showAttachmentFolders) : rawTree;
+  const tree = rawTree ? sortTree(rawTree, treeSort, showAttachmentFolders, manualOrder) : rawTree;
   const loadTree = useStore((s) => s.loadTree);
   const notify = useStore((s) => s.notify);
   const closeTab = useStore((s) => s.closeTab);

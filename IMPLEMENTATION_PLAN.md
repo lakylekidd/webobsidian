@@ -4,7 +4,7 @@
 > Quy ước: `[ ]` chưa làm · `[~]` đang làm · `[x]` xong.
 > Cập nhật file này **mỗi khi** một mục thay đổi trạng thái.
 
-Cập nhật lần cuối: 2026-10-16 (ẩn thư mục attachments trong tree; local attachment folders + nút xoá ảnh #30; trash retention; fix hanging indent list/task #20; nút xoá nhanh trong file tree + confirm trong app; double-click inline rename #19; trước đó: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
+Cập nhật lần cuối: 2026-10-16 (manual file/folder sorting kéo-thả theo thư mục #34; ẩn thư mục attachments trong tree; local attachment folders + nút xoá ảnh #30; trash retention; fix hanging indent list/task #20; nút xoá nhanh trong file tree + confirm trong app; double-click inline rename #19; trước đó: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
 
 ---
 
@@ -455,8 +455,15 @@ Cập nhật lần cuối: 2026-10-16 (ẩn thư mục attachments trong tree; l
 - [x] M31.2 Server: `GET /files/content|resolve` nhận `from` (resolve tương đối theo note, fallback basename); `GET /files/references`; `DELETE /files?permanent=1`.
 - [x] M31.3 Icon thùng rác khi hover ảnh (Live Preview + Reading): gỡ tham chiếu, kiểm tra tham chiếu khác, xoá vĩnh viễn hoặc cảnh báo + chỉ gỡ khỏi note.
 
+## Phase 32 — Manual sorting trong file explorer (FR-1, issue #34)
+- [x] M32.1 Thêm sort mode `manual` vào `treeSort` (persist trong uistate), menu "Change sort order" có mục Manual.
+- [x] M32.2 Lưu metadata thứ tự thủ công theo từng thư mục (`manualOrder`: key = parent folder path, value = child paths) và reconcile khi tree thay đổi để giữ thứ tự cũ, item mới append cuối.
+- [x] M32.3 Drag-and-drop ở Manual mode: thả lên sibling row để reorder file/folder trong cùng thư mục; không rename file/folder.
+- [x] M32.4 Chuyển sang mode sort khác không xoá metadata manual; chuyển lại Manual khôi phục thứ tự trước đó.
+
 ### Nhật ký tiến độ
 
+- 2026-10-16 (Issue #34 — Manual sorting file explorer): thêm mode sort `Manual` + metadata `manualOrder` persist trong `/api/uistate` theo từng parent folder; khi reload/reopen/switch folder vẫn giữ thứ tự. Drag-thả trên sibling row trong cùng thư mục sẽ reorder (file+folder cùng danh sách), không đổi tên đường dẫn. Khi tree đổi (create/move/delete), reconcile giữ thứ tự cũ và append item mới vào cuối thư mục đích. Verify: web/server typecheck + build sạch.
 - 2026-10-16 (Local attachments #30): ảnh dán lưu cạnh note + link tương đối; endpoint resolve/references/permanent delete;
   icon xoá khi hover ảnh. Server + web typecheck sạch; chưa kiểm thử thủ công trên trình duyệt.
 - 2026-10-16 (Quick create #23): hover thư mục trong file tree hiện icon New note / New canvas ở bên phải; tạo
