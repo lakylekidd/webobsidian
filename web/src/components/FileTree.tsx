@@ -5,6 +5,7 @@ import { findNode, pruneDescendants } from '../lib/tree';
 import { pathToUrl } from '../lib/urlsync';
 import Icon from './Icon';
 import { humanizeTitle } from '../lib/title';
+import { confirmDialog } from '../lib/confirm';
 
 /** Inline rename box shown in place of a tree row's name (Obsidian-style). */
 function RenameInput({ node, onDone }: { node: TreeNode; onDone: () => void }) {
@@ -207,7 +208,8 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
 
   const doDeleteMany = async () => {
     const paths = pruneDescendants(useStore.getState().selected);
-    if (!paths.length || !confirm(`Delete ${paths.length} item${paths.length > 1 ? 's' : ''}?`)) return;
+    if (!paths.length) return;
+    if (!(await confirmDialog(`Delete ${paths.length} item${paths.length > 1 ? 's' : ''}?`, { confirmLabel: 'Delete', danger: true }))) return;
     let n = 0;
     for (const p of paths) {
       const r = await api.remove(p).catch(() => null);
@@ -221,7 +223,7 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
 
   const doRename = () => setRenamingPath(node.path);
   const doDelete = async () => {
-    if (confirm(`Delete "${node.name}"?`)) {
+    if (await confirmDialog(`Delete "${node.name}"?`, { confirmLabel: 'Delete', danger: true })) {
       const r = await api.remove(node.path);
       closeTab(node.path);
       await loadTree();
