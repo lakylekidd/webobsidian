@@ -1,7 +1,9 @@
 # PRD — WebObsidian
 
 > Product Requirements Document
-> Phiên bản: 1.8 · Cập nhật: 2026-10-16 · Trạng thái: Draft
+> Phiên bản: 1.10 · Cập nhật: 2026-10-16 · Trạng thái: Draft
+> Changelog 1.10 (FR-1 — Ẩn thư mục attachments trong file tree): thêm tuỳ chọn **Settings → Vault & Files → Show attachment folders** (mặc định **tắt**, lưu cùng workspace state nên đồng bộ giữa tab/thiết bị). Khi tắt, thư mục tên `attachments` (không phân biệt hoa thường) bị ẩn khỏi file tree, folder view và hộp "Move to…" — **trừ khi** bên trong (kể cả thư mục con) có note `.md`/`.markdown` hoặc canvas (safeguard để không ẩn thư mục thật của người dùng). Chỉ ẩn khi hiển thị: file vẫn nằm trên đĩa, embed/share không đổi, cảnh báo xoá folder vẫn đếm cả nội dung ẩn; "Reveal file in navigation" cho file nằm trong thư mục ẩn sẽ báo cách bật tuỳ chọn. Sau khi xoá/đưa vào trash file trong `attachments/`, thư mục `attachments/` rỗng được tự dọn (không đụng thư mục khác).
+> Changelog 1.9 (FR-1/FR-2 — Local attachment folders + nút xoá ảnh, issue #30): ảnh dán/drop được lưu vào `attachments/` **cạnh note** (tự tạo; tên không bao giờ ghi đè: `image.png`, `image-1.png`…) và chèn đường dẫn tương đối `![](attachments/x.png)`. `GET /api/files/content?path=…&from=<note>` resolve đường dẫn tương đối theo thư mục note trước, rồi mới fallback basename toàn vault. Hover ảnh (Live Preview + Reading) hiện icon thùng rác góc trên-phải: xoá tham chiếu khỏi note; kiểm tra tham chiếu ở note khác (`GET /api/files/references`) — không còn ai dùng thì xoá vĩnh viễn file (`DELETE /api/files?permanent=1`), còn dùng thì cảnh báo và chỉ gỡ khỏi note hiện tại (giữ file).
 > Changelog 1.8 (FR-1 — Trash retention): thêm setting `vault.trashRetentionDays` (mặc định **30**, `0` = giữ mãi) trong Settings → Vault & Files. Item trong `.trash` bị **xoá vĩnh viễn** sau số ngày này, tính từ **thời điểm item được chuyển vào trash** (không phải mtime của file — `rename` giữ nguyên mtime gốc). Thời điểm ghi trong `<trash>/.trash-index.json`; item có sẵn trong trash trước tính năng được bắt đầu tính từ lần quét đầu tiên (không bị xoá ngay). Dọn lúc khởi động, mỗi giờ và ngay khi đổi setting; chỉ tác động trong `.trash`.
 > Changelog 1.7 (FR-1 — Inline rename từ file tree, issue #19): double-click tên file, folder hoặc canvas để vào inline rename; Enter xác nhận, Escape huỷ. Giữ Rename trong context menu và dùng cùng validation hiện có.
 > Changelog 1.6 (FR-2 — Link preview card, issue #7): URL đứng riêng một dòng render thành thẻ preview (thumbnail, title, mô tả 2 dòng, domain) ở Reading view, Live Preview và trang Public share; Markdown gốc giữ nguyên, lỗi fetch → link thường. Server fetch metadata an toàn (chặn IP nội bộ, giới hạn redirect/size/timeout, chỉ lấy OG text) qua provider chain mở rộng được.
@@ -188,6 +190,9 @@ webobsidian/
 - Hỗ trợ attachments (ảnh/pdf/…); upload từ web. Thư mục đích upload resolve **case-insensitive** với folder
   sẵn có (`vault.resolveDirCaseInsensitive`) — tránh tạo thư mục trùng khác hoa-thường (vd `attachments` cạnh
   `Attachments` có sẵn) trên filesystem phân biệt hoa-thường (Linux).
+- Ảnh dán/drop vào note lưu ở `<thư-mục-note>/attachments/` (tự tạo, tên unique) và dùng link tương đối; hover ảnh có
+  icon xoá (gỡ tham chiếu + xoá file nếu không note nào khác dùng) — xem Changelog 1.9.
+- Thư mục `attachments/` mặc định **ẩn** khỏi file tree (tuỳ chọn *Show attachment folders*; thư mục có chứa note/canvas không bao giờ bị ẩn) — xem Changelog 1.10.
 - Watch filesystem (chokidar) để phản ánh thay đổi ngoài (git pull, sửa trực tiếp).
 - Tương thích cấu trúc `.obsidian/` (config, plugins, themes).
 

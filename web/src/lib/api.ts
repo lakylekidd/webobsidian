@@ -127,10 +127,19 @@ export const api = {
     req<{ ok: true }>('/api/files/rename', { method: 'PATCH', body: JSON.stringify({ from, to }) }),
   copy: (from: string, to: string) =>
     req<{ ok: true }>('/api/files/copy', { method: 'POST', body: JSON.stringify({ from, to }) }),
-  remove: (path: string) =>
+  remove: (path: string, permanent = false) =>
     req<{ ok: true; trashed?: string; deleted?: string }>(
-      `/api/files/?path=${encodeURIComponent(path)}`,
+      `/api/files/?path=${encodeURIComponent(path)}${permanent ? '&permanent=1' : ''}`,
       { method: 'DELETE' },
+    ),
+  resolveAttachment: (path: string, from: string) =>
+    req<{ path: string | null }>(
+      `/api/files/resolve?path=${encodeURIComponent(path)}&from=${encodeURIComponent(from)}`,
+    ),
+  // notes (other than `exclude`) still referencing an attachment
+  references: (path: string, exclude?: string) =>
+    req<{ references: string[] }>(
+      `/api/files/references?path=${encodeURIComponent(path)}${exclude ? `&exclude=${encodeURIComponent(exclude)}` : ''}`,
     ),
   // trash (FR-1)
   listTrash: () => req<{ items: TrashItem[] }>('/api/files/trash'),

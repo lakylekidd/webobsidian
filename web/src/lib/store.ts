@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { isInsideHiddenAttachmentFolder } from './attachments';
 import { api, type TreeNode, type ShareRecord } from './api';
 import { findNode } from './tree';
 
@@ -110,6 +111,9 @@ interface AppState {
   setTreeSort: (s: TreeSort) => void;
   autoReveal: boolean;
   toggleAutoReveal: () => void;
+  /** Show auto-created `attachments/` folders in the file tree (persisted; hidden by default). */
+  showAttachmentFolders: boolean;
+  setShowAttachmentFolders: (v: boolean) => void;
 
   // split pane (open to the side)
   splitPath: string | null;
@@ -222,7 +226,7 @@ const TEXT_RE = /\.(md|markdown|txt|json|csv|canvas|css|js|ya?ml)$/i;
 const PERSIST_KEYS = [
   'tabs', 'activePath', 'viewMode', 'expanded', 'splitPath', 'splitDirection',
   'recent', 'bookmarks', 'leftPanel', 'rightPanel', 'leftOpen', 'rightOpen', 'graphSettings',
-  'treeSort', 'autoReveal',
+  'treeSort', 'autoReveal', 'showAttachmentFolders',
 ] as const;
 
 function pickPersisted(s: any): Record<string, unknown> {
@@ -258,6 +262,7 @@ function applyPersisted(s: any, set: (p: any) => void): void {
     expanded: Array.isArray(s.expanded) ? s.expanded : [],
     treeSort: TREE_SORTS.includes(s.treeSort) ? s.treeSort : 'name-asc',
     autoReveal: s.autoReveal === true,
+    showAttachmentFolders: s.showAttachmentFolders === true,
     splitPath: typeof s.splitPath === 'string' ? s.splitPath : null,
     splitDirection: s.splitDirection === 'down' ? 'down' : 'right',
     recent: Array.isArray(s.recent) ? s.recent : [],
@@ -358,6 +363,8 @@ export const useStore = create<AppState>()(
       setTreeSort: (treeSort) => set({ treeSort }),
       autoReveal: false,
       toggleAutoReveal: () => set((s) => ({ autoReveal: !s.autoReveal })),
+      showAttachmentFolders: false,
+      setShowAttachmentFolders: (showAttachmentFolders) => set({ showAttachmentFolders }),
 
       splitPath: null,
       splitContent: '',
@@ -453,6 +460,11 @@ export const useStore = create<AppState>()(
       revealInTree: (path) => {
         // Expand every ancestor folder so the file's row is rendered, open the
         // Files panel, then let FileTree scroll the now-visible row into view.
+        const st0 = get();
+        if (!st0.showAttachmentFolders && isInsideHiddenAttachmentFolder(st0.tree, path)) {
+          st0.notify('That file is in a hidden attachments folder — turn on Settings → Vault & Files → Show attachment folders.', 4500);
+          return;
+        }
         const segs = path.split('/');
         segs.pop();
         const ancestors: string[] = [];
