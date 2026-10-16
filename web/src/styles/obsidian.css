@@ -921,6 +921,8 @@ body.wo-col-resizing .sidebar, body.wo-col-resizing .right-sidebar { transition:
 /* In-app confirm (replaces window.confirm, which embedded browsers suppress). */
 .modal.confirm-dialog { width: 380px; padding: 18px 20px 16px; overflow: visible; }
 .confirm-dialog-msg { margin: 0 0 16px; color: var(--text-normal); font-size: 14px; line-height: 1.45; word-break: break-word; }
+.confirm-dialog-msg + .confirm-dialog-detail { margin-top: -8px; }
+.confirm-dialog-detail { margin: 0 0 16px; color: var(--text-muted); font-size: 13px; line-height: 1.45; }
 .confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .palette-input { width: 100%; padding: 14px 16px; font-size: 16px; background: transparent; border: 0;
   border-bottom: 1px solid var(--bg-modifier-border); color: var(--text-normal); outline: none; }

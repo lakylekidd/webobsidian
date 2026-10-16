@@ -7,6 +7,8 @@ import { create } from 'zustand';
  */
 export interface ConfirmRequest {
   message: string;
+  /** Optional secondary line (e.g. a warning about what else is affected). */
+  detail?: string;
   confirmLabel: string;
   danger: boolean;
   resolve: (ok: boolean) => void;
@@ -16,7 +18,7 @@ export const useConfirm = create<{ req: ConfirmRequest | null }>(() => ({ req: n
 
 export function confirmDialog(
   message: string,
-  opts: { confirmLabel?: string; danger?: boolean } = {},
+  opts: { confirmLabel?: string; danger?: boolean; detail?: string } = {},
 ): Promise<boolean> {
   // A second request while one is open cancels the first.
   useConfirm.getState().req?.resolve(false);
@@ -24,6 +26,7 @@ export function confirmDialog(
     useConfirm.setState({
       req: {
         message,
+        detail: opts.detail,
         confirmLabel: opts.confirmLabel ?? 'OK',
         danger: opts.danger ?? false,
         resolve: (ok) => {

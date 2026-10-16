@@ -19,7 +19,7 @@ export default function ConfirmDialog() {
         className="modal confirm-dialog"
         role="alertdialog"
         aria-modal="true"
-        aria-label={req.message}
+        aria-label={req.detail ? `${req.message} ${req.detail}` : req.message}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === 'Escape') {
@@ -29,6 +29,7 @@ export default function ConfirmDialog() {
         }}
       >
         <p className="confirm-dialog-msg">{req.message}</p>
+        {req.detail && <p className="confirm-dialog-detail">{req.detail}</p>}
         <div className="confirm-dialog-actions">
           <button ref={cancelRef} className="btn secondary" onClick={cancel}>
             Cancel

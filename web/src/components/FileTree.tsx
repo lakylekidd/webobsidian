@@ -72,6 +72,13 @@ function RenameInput({ node, onDone }: { node: TreeNode; onDone: () => void }) {
   );
 }
 
+/** Number of files and folders nested anywhere under a folder node. */
+function countDescendants(node: TreeNode): number {
+  let n = 0;
+  for (const c of node.children ?? []) n += 1 + countDescendants(c);
+  return n;
+}
+
 function fileIcon(node: TreeNode): string | null {
   const ext = node.ext ?? '';
   if (/\.(md|markdown)$/.test(ext)) return null; // markdown: text only, like Obsidian
@@ -209,7 +216,10 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
   const doDeleteMany = async () => {
     const paths = pruneDescendants(useStore.getState().selected);
     if (!paths.length) return;
-    if (!(await confirmDialog(`Delete ${paths.length} item${paths.length > 1 ? 's' : ''}?`, { confirmLabel: 'Delete', danger: true }))) return;
+    const rootNode = useStore.getState().tree;
+    const hasFolder = paths.some((p) => findNode(rootNode, p)?.type === 'folder');
+    const detail = hasFolder ? 'Folders and everything inside them will be removed.' : undefined;
+    if (!(await confirmDialog(`Delete ${paths.length} item${paths.length > 1 ? 's' : ''}?`, { confirmLabel: 'Delete', danger: true, detail }))) return;
     let n = 0;
     for (const p of paths) {
       const r = await api.remove(p).catch(() => null);
@@ -223,7 +233,14 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
 
   const doRename = () => setRenamingPath(node.path);
   const doDelete = async () => {
-    if (await confirmDialog(`Delete "${node.name}"?`, { confirmLabel: 'Delete', danger: true })) {
+    let detail: string | undefined;
+    if (node.type === 'folder') {
+      const n = countDescendants(node);
+      detail = n
+        ? `The folder and its contents (${n} item${n === 1 ? '' : 's'}) will be removed.`
+        : 'The empty folder will be removed.';
+    }
+    if (await confirmDialog(`Delete "${node.name}"?`, { confirmLabel: 'Delete', danger: true, detail })) {
       const r = await api.remove(node.path);
       closeTab(node.path);
       await loadTree();
