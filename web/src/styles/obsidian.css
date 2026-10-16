@@ -489,9 +489,8 @@ body.wo-col-resizing .sidebar, body.wo-col-resizing .right-sidebar { transition:
 .cm-s-obsidian .cm-line.HyperMD-hang .cm-ol-marker { display: inline-block; width: var(--hang-marker-w); text-indent: 0; white-space: nowrap; vertical-align: top; }
 .cm-s-obsidian .cm-line.HyperMD-hang .cm-indent { width: var(--hang-indent-w); overflow: hidden; vertical-align: top; text-indent: 0; }
 .cm-s-obsidian .cm-line.HyperMD-hang {
-  --hang-prefix: calc(var(--hang-units, 0) * var(--hang-indent-w) + var(--hang-marker-w));
   padding-left: calc(var(--hang-prefix) + 6px);
-  text-indent: calc(-1 * var(--hang-prefix));
+  text-indent: calc(0px - var(--hang-prefix));
 }
 /* Math (KaTeX) */
 .cm-math-rendered.math-block { display: block; text-align: center; padding: 0.5em 0; }
@@ -658,7 +657,7 @@ body.wo-col-resizing .sidebar, body.wo-col-resizing .right-sidebar { transition:
 .markdown-preview ul, .markdown-preview ol { padding-left: 1.6em; }
 .markdown-preview li::marker { color: var(--text-faint); }
 /* Tasks: no bullet, strike only x/X (same rule as Live mode, §7) */
-.markdown-preview li.task-list-item { list-style: none; padding-left: calc(var(--font-text-size) + 6px); text-indent: calc(-1 * (var(--font-text-size) + 6px)); }
+.markdown-preview li.task-list-item { list-style: none; padding-left: calc(var(--font-text-size) + 6px); text-indent: calc(0px - (var(--font-text-size) + 6px)); }
 .markdown-preview li.task-list-item > * { text-indent: 0; }
 .markdown-preview ul:has(> li.task-list-item) { padding-left: 0.6em; }
 .markdown-preview li.task-list-item input[type="checkbox"] { pointer-events: none; }

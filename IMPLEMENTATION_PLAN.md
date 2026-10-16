@@ -4,7 +4,7 @@
 > Quy ước: `[ ]` chưa làm · `[~]` đang làm · `[x]` xong.
 > Cập nhật file này **mỗi khi** một mục thay đổi trạng thái.
 
-Cập nhật lần cuối: 2026-10-16 (trash retention; nút xoá nhanh trong file tree + confirm trong app; double-click inline rename trong file tree #19; trước đó 2026-10-15: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
+Cập nhật lần cuối: 2026-10-16 (trash retention; fix hanging indent list/task #20; nút xoá nhanh trong file tree + confirm trong app; double-click inline rename #19; trước đó: hanging indent list/task/ordered; multi-cursor #10; link preview card #7)
 
 ---
 
@@ -442,6 +442,9 @@ Cập nhật lần cuối: 2026-10-16 (trash retention; nút xoá nhanh trong fi
       Enter xác nhận, Escape huỷ, click đơn vẫn xử lý bình thường. Web typecheck + production build sạch.
       `Editor.tsx` không `v.focus()` khi đang rename (double-click note chưa mở: editor mount cướp focus làm input bị blur/đóng).
 
+## Phase 29 — List hanging indent compatibility (FR-2, issue #20)
+- [x] M29.1 Tạo prefix indent bằng phép cộng và phép trừ CSS `calc()` thay phép nhân, để hanging indent hoạt động ổn định trên Edge với bullet, numbered, task và nested lists. Typecheck/build sạch; Chromium xác nhận wrapped line thẳng hàng cho bullet, numbered, task và nested list.
+
 ## Phase 30 — Trash retention (FR-1, PRD 1.8)
 - [x] M30.1 Setting `vault.trashRetentionDays` (int 0–3650, mặc định 30; 0 = giữ mãi) + validate ở `PUT /api/settings` + ô nhập trong Settings → Vault & Files.
 - [x] M30.2 Ghi thời điểm vào trash: `services/trashindex.ts` (`<trash>/.trash-index.json`, khoá theo path, lock tuần tự, guard path escape); `vault.trash()` ghi, restore/xoá item cập nhật; `listTrash` trả thời điểm xoá thật.
@@ -449,6 +452,7 @@ Cập nhật lần cuối: 2026-10-16 (trash retention; nút xoá nhanh trong fi
 
 ### Nhật ký tiến độ
 
+- 2026-10-16 (Issue #20): hanging indent không ổn định do phép nhân trong CSS `calc()` khi tạo prefix và negative indent. Thay bằng chuỗi phép cộng theo số cấp lồng, cùng phép trừ tương thích hơn với Edge. Verify: typecheck/build sạch; Chromium xác nhận wrapped line thẳng hàng cho bullet, numbered, task và nested list.
 - 2026-10-16 (Double-click rename #19): dùng lại inline rename hiện có cho tên file tree, bỏ xử lý click lần hai
   để tránh mở/toggle thêm; giữ nguyên luồng context menu. Web typecheck + production build sạch.
   Sửa: double-click note chưa mở → editor mount `v.focus()` làm blur input rename; bỏ focus khi `renamingPath` set. Verify thủ công: note/canvas/folder rename + Escape.
@@ -1303,3 +1307,4 @@ Cập nhật lần cuối: 2026-10-16 (trash retention; nút xoá nhanh trong fi
 - 2026-10-15: Highlight YAML front matter trong Source mode (issue #9) — `Editor.tsx` dùng `yamlFrontmatter` (@codemirror/lang-yaml) bọc markdown; `highlight.ts` thêm style `meta` cho `---`. Verify: typecheck.
 - 2026-10-16: Trash retention (PRD 1.8) — setting `vault.trashRetentionDays` (30 mặc định), index thời điểm xoá `.trash-index.json`, purge khi khởi động/mỗi giờ/đổi setting. Verify: typecheck sạch; test thủ công — item 31 ngày bị xoá, 29 ngày giữ; file mtime 2020 vừa xoá không bị purge; folder hết hạn xoá cả cây; retention 0 giữ; giá trị sai (99999, chữ, số lẻ, âm) bị bỏ qua; UI lưu/giữ lại giá trị cũ khi nhập sai.
 - 2026-10-16: Nút xoá nhanh (hover) trên hàng file tree — `FileTree.tsx` (`.tree-del`, gọi `doDelete`). Sửa lỗi nút "không phản hồi": `window.confirm()` bị chặn/tự huỷ trong trình duyệt nhúng (preview pane) nên không có prompt → thêm `lib/confirm.ts` (`confirmDialog` dạng promise) + `ConfirmDialog.tsx` (Esc/Cancel/backdrop = huỷ, focus mặc định ở Cancel); dùng cho `doDelete`/`doDeleteMany` (context menu cũng hưởng). Verify: typecheck sạch; cancel/Esc giữ file, Delete chuyển vào .trash. Xoá folder: dòng cảnh báo phụ (`detail`) "folder và nội dung (N mục) sẽ bị xoá" / "folder rỗng"; xoá nhiều mục có folder → "Folders and everything inside them will be removed.". Chưa đổi các `confirm()` khác (Settings, TrashView, VersionHistory, ShareDialog, Workspace) Fallback touch/keyboard: nút dùng `opacity` thay `display:none` (tab được, hiện khi hover/focus-within/focus-visible), `@media (hover:none),(pointer:coarse)` chỉ hiện trên hàng đang chọn (`.selected`, tap hàng để chọn; hàng khác opacity 0 + `pointer-events:none` để không chạm nhầm) + vùng chạm lớn hơn; `ConfirmDialog` bẫy Tab giữa Cancel/Delete.
+- 2026-10-16: Sửa hanging indent ordered list sau khi đổi `calc()` (nhánh fix-indentations-in-lists) — `hang()` phải đặt cả `--hang-marker-w` lên dòng (box `.cm-ol-marker` dùng biến này làm width), nếu không box lấy giá trị mặc định và dòng wrap lệch 4–13px. Verify: đo pixel 15 dòng lồng nhau (bullet/task/ordered 1–2 chữ số/tab/hỗn hợp) + note cũ, tất cả thẳng hàng; typecheck sạch.
