@@ -5,6 +5,7 @@ import { findNode, pruneDescendants } from '../lib/tree';
 import { pathToUrl } from '../lib/urlsync';
 import Icon from './Icon';
 import { humanizeTitle } from '../lib/title';
+import { confirmDialog } from '../lib/confirm';
 
 /** Inline rename box shown in place of a tree row's name (Obsidian-style). */
 function RenameInput({ node, onDone }: { node: TreeNode; onDone: () => void }) {
@@ -69,6 +70,13 @@ function RenameInput({ node, onDone }: { node: TreeNode; onDone: () => void }) {
       onBlur={finish(true)}
     />
   );
+}
+
+/** Number of files and folders nested anywhere under a folder node. */
+function countDescendants(node: TreeNode): number {
+  let n = 0;
+  for (const c of node.children ?? []) n += 1 + countDescendants(c);
+  return n;
 }
 
 function fileIcon(node: TreeNode): string | null {
@@ -207,7 +215,11 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
 
   const doDeleteMany = async () => {
     const paths = pruneDescendants(useStore.getState().selected);
-    if (!paths.length || !confirm(`Delete ${paths.length} item${paths.length > 1 ? 's' : ''}?`)) return;
+    if (!paths.length) return;
+    const rootNode = useStore.getState().tree;
+    const hasFolder = paths.some((p) => findNode(rootNode, p)?.type === 'folder');
+    const detail = hasFolder ? 'Folders and everything inside them will be removed.' : undefined;
+    if (!(await confirmDialog(`Delete ${paths.length} item${paths.length > 1 ? 's' : ''}?`, { confirmLabel: 'Delete', danger: true, detail }))) return;
     let n = 0;
     for (const p of paths) {
       const r = await api.remove(p).catch(() => null);
@@ -221,7 +233,14 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
 
   const doRename = () => setRenamingPath(node.path);
   const doDelete = async () => {
-    if (confirm(`Delete "${node.name}"?`)) {
+    let detail: string | undefined;
+    if (node.type === 'folder') {
+      const n = countDescendants(node);
+      detail = n
+        ? `The folder and its contents (${n} item${n === 1 ? '' : 's'}) will be removed.`
+        : 'The empty folder will be removed.';
+    }
+    if (await confirmDialog(`Delete "${node.name}"?`, { confirmLabel: 'Delete', danger: true, detail })) {
       const r = await api.remove(node.path);
       closeTab(node.path);
       await loadTree();
@@ -393,6 +412,19 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
               {node.name}
             </span>
           )}
+          {!editing && (
+            <button
+              className="tree-del"
+              title="Delete"
+              aria-label={`Delete ${node.name}`}
+              draggable={false}
+              onClick={(e) => { e.stopPropagation(); void doDelete(); }}
+              onDoubleClick={(e) => e.stopPropagation()}
+              onContextMenu={(e) => e.stopPropagation()}
+            >
+              <Icon name="trash" size={13} />
+            </button>
+          )}
         </div>
         {open && (
           <div className="tree-children">
@@ -438,6 +470,19 @@ function Node({ node, depth }: { node: TreeNode; depth: number }) {
           <Icon name="globe" size={12} className="share-globe" />
         )}
         {bookmarks.includes(node.path) && <Icon name="bookmark" size={12} className="bm-star" />}
+        {!editing && (
+          <button
+          className="tree-del"
+          title="Delete"
+          aria-label={`Delete ${node.name}`}
+          draggable={false}
+          onClick={(e) => { e.stopPropagation(); void doDelete(); }}
+          onDoubleClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.stopPropagation()}
+          >
+          <Icon name="trash" size={13} />
+          </button>
+        )}
       </div>
     </div>
   );
