@@ -11,6 +11,20 @@ export default function ConfirmDialog() {
     if (req) cancelRef.current?.focus();
   }, [req]);
 
+  // Escape must close the dialog even if focus ended up elsewhere (e.g. an editor that
+  // grabbed focus back right after the dialog opened), so listen at the window level.
+  useEffect(() => {
+    if (!req) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      req.resolve(false);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [req]);
+
   if (!req) return null;
   const cancel = () => req.resolve(false);
   return (

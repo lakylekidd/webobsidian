@@ -45,6 +45,7 @@ import { renderMarkdown } from '../lib/markdown';
 import { setActiveEditor } from '../lib/activeEditor';
 import { api } from '../lib/api';
 import { humanizeTitle } from '../lib/title';
+import { confirmDialog } from '../lib/confirm';
 
 const titleOf = (path: string | null) => (path ? humanizeTitle(path) : '');
 
@@ -85,17 +86,32 @@ export default function Editor() {
       }
       const base = (file.split('/').pop() ?? file).toLowerCase();
       const refs = (await api.references(file, note).catch(() => ({ references: [] as string[] }))).references;
-      // other embeds of the same file left in THIS note (the one being removed is counted once)
+      // Other embeds of the same file left in THIS note (the one being removed counts once).
+      // The file name can appear raw or %20-encoded; count each distinct spelling once —
+      // names without spaces have identical spellings and must not be counted twice.
       const doc = v.state.doc.toString().toLowerCase();
-      const inThisNote = doc.split(base).length - 1 + (doc.split(base.replace(/ /g, '%20')).length - 1) > 1;
+      const spellings = Array.from(new Set([base, base.replace(/ /g, '%20')]));
+      const mentions = spellings.reduce((n, s) => n + (doc.split(s).length - 1), 0);
+      const inThisNote = mentions > 1;
+      // Native confirm() is blocked or silently auto-cancelled in embedded browsers (the click
+      // then does nothing), so use the in-app dialog.
       if (refs.length || inThisNote) {
         const where = refs.length
           ? `${refs.length} other note${refs.length > 1 ? 's' : ''} (${refs.slice(0, 3).join(', ')}${refs.length > 3 ? ', …' : ''})`
           : 'elsewhere in this note';
-        if (confirm(`"${file}" is also used in ${where}.\n\nRemove the image from this note only? The file will be kept.`)) remove();
+        const ok = await confirmDialog(`"${file}" is also used in ${where}.`, {
+          detail: 'Remove the image from this note only? The file will be kept.',
+          confirmLabel: 'Remove from this note',
+        });
+        if (ok) remove();
         return;
       }
-      if (!confirm(`Remove this image and permanently delete "${file}"?`)) return;
+      const ok = await confirmDialog(`Remove this image and permanently delete "${file}"?`, {
+        detail: 'This cannot be undone: the file is deleted immediately, not moved to the trash.',
+        confirmLabel: 'Delete',
+        danger: true,
+      });
+      if (!ok) return;
       remove();
       try {
         await api.remove(file, true);
